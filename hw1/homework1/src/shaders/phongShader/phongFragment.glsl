@@ -116,17 +116,17 @@ float PCF(sampler2D shadowMap, vec4 coords) {
 	float zReceiver = coords.z; // Assumed to be eye-space z in this code
   poissonDiskSamples(uv);
   //uniformDiskSamples(uv);
- // float filter_radius=LIGHT_SIZE_UV * NEAR_PLANE / zReceiver;
+  float filter_radius=LIGHT_SIZE_UV * NEAR_PLANE / zReceiver;
   float sum=0.0;
   for(int i=0;i<PCF_NUM_SAMPLES;++i)
   {
-    float depth=unpack(texture2D(shadowMap,uv+poissonDisk[i]));
-    if(zReceiver<=depth+EPS) ++sum;
+    float depth=unpack(texture2D(shadowMap,uv+poissonDisk[i]/1024.0*filter_radius));
+    if(zReceiver<=depth+bias) ++sum;
   }
   for(int i=0;i<PCF_NUM_SAMPLES;++i)
   {
-    float depth=unpack(texture2D(shadowMap,uv-poissonDisk[i].yx));
-    if(zReceiver<=depth+EPS) ++sum;
+    float depth=unpack(texture2D(shadowMap,uv-poissonDisk[i].yx/1024.0*filter_radius));
+    if(zReceiver<=depth+bias) ++sum;
   }
 
   //return 1.0;
