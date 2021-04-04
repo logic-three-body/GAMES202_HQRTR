@@ -20,6 +20,12 @@ varying highp vec3 vNormal;
 #define PCF_NUM_SAMPLES NUM_SAMPLES
 #define NUM_RINGS 10
 
+
+#define NEAR_PLANE 9.5
+#define LIGHT_WORLD_SIZE 0.05
+#define LIGHT_FRUSTUM_WIDTH 3.75
+#define LIGHT_SIZE_UV (LIGHT_WORLD_SIZE/LIGHT_FRUSTUM_WIDTH)
+
 #define EPS 1e-3
 #define PI 3.141592653589793
 #define PI2 6.283185307179586
@@ -104,22 +110,23 @@ float findBlocker( sampler2D shadowMap,  vec2 uv, float zReceiver ) {
 
 float PCF(sampler2D shadowMap, vec4 coords) {
   //refer three.js master webgl-shadowmap_pcss 
+  coords=coords*0.5+0.5;//shadow between [0,1] NDC
   float bias=ShadowBias(vNormal,normalize(uLightPos));
   vec2 uv = coords.xy;
 	float zReceiver = coords.z; // Assumed to be eye-space z in this code
   poissonDiskSamples(uv);
   //uniformDiskSamples(uv);
-  float filter_radius=1.0;
+ // float filter_radius=LIGHT_SIZE_UV * NEAR_PLANE / zReceiver;
   float sum=0.0;
   for(int i=0;i<PCF_NUM_SAMPLES;++i)
   {
-    float depth=unpack(texture2D(shadowMap,uv+poissonDisk[i]*filter_radius));
-    if(zReceiver<=depth+bias) ++sum;
+    float depth=unpack(texture2D(shadowMap,uv+poissonDisk[i]));
+    if(zReceiver<=depth+EPS) ++sum;
   }
   for(int i=0;i<PCF_NUM_SAMPLES;++i)
   {
-    float depth=unpack(texture2D(shadowMap,uv-poissonDisk[i].yx*filter_radius));
-    if(zReceiver<=depth+bias) ++sum;
+    float depth=unpack(texture2D(shadowMap,uv-poissonDisk[i].yx));
+    if(zReceiver<=depth+EPS) ++sum;
   }
 
   //return 1.0;
