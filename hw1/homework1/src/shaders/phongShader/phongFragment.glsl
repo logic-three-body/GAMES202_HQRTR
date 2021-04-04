@@ -111,7 +111,8 @@ float ShadowBias(vec3 normal,vec3 lightDir)
 
 float useShadowMap(sampler2D shadowMap, vec4 shadowCoord){
   shadowCoord=shadowCoord*0.5+0.5;//shadow between [0,1] NDC
-  float bias=0.194;//constant test
+//  float bias=0.06;//constant test
+  float bias=ShadowBias(vNormal,normalize(uLightPos));//constant test
   float closetDepth=texture2D(shadowMap,shadowCoord.xy).r;
   float currentDepth=shadowCoord.z-bias;//相当于把点向上移动减小深度，参考RTR4 P237 Figure 7.13. || Yan老师 PDF P18
   return currentDepth>closetDepth?0.0:1.0;
