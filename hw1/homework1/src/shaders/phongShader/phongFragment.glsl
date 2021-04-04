@@ -15,7 +15,7 @@ varying highp vec3 vFragPos;
 varying highp vec3 vNormal;
 
 // Shadow map related variables
-#define NUM_SAMPLES 20
+#define NUM_SAMPLES 200
 #define BLOCKER_SEARCH_NUM_SAMPLES NUM_SAMPLES
 #define PCF_NUM_SAMPLES NUM_SAMPLES
 #define NUM_RINGS 10
@@ -91,7 +91,7 @@ void uniformDiskSamples( const in vec2 randomSeed ) {
 
 float ShadowBias(vec3 normal,vec3 lightDir)
 {
-  return max(0.01*(1.0-max(dot(normal,lightDir),0.0)),0.006);
+  return max(0.01*(1.0-max(dot(normal,lightDir),0.0)),0.005);
  // return 1.0;
 }
 
@@ -116,16 +116,16 @@ float PCF(sampler2D shadowMap, vec4 coords) {
 	float zReceiver = coords.z; // Assumed to be eye-space z in this code
   poissonDiskSamples(uv);
   //uniformDiskSamples(uv);
-  float filter_radius=LIGHT_SIZE_UV * NEAR_PLANE / zReceiver;
+  float filter_radius=1.0;
   float sum=0.0;
   for(int i=0;i<PCF_NUM_SAMPLES;++i)
   {
-    float depth=unpack(texture2D(shadowMap,uv+poissonDisk[i]/1024.0*filter_radius));
+    float depth=unpack(texture2D(shadowMap,uv+poissonDisk[i]/float(PCF_NUM_SAMPLES)*filter_radius));
     if(zReceiver<=depth+bias) ++sum;
   }
   for(int i=0;i<PCF_NUM_SAMPLES;++i)
   {
-    float depth=unpack(texture2D(shadowMap,uv-poissonDisk[i].yx/1024.0*filter_radius));
+    float depth=unpack(texture2D(shadowMap,uv-poissonDisk[i].yx/float(PCF_NUM_SAMPLES)*filter_radius));
     if(zReceiver<=depth+bias) ++sum;
   }
 
