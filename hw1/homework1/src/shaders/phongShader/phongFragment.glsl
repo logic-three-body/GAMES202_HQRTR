@@ -20,12 +20,7 @@ varying highp vec3 vNormal;
 #define PCF_NUM_SAMPLES NUM_SAMPLES
 #define NUM_RINGS 10
 
-//FOR filter_radius blocksearch -> lightsize and receiver's distance from light 
-#define LIGHT_WORLD_SIZE 0.005
-#define LIGHT_FRUSTUM_WIDTH 3.75
-#define LIGHT_SIZE_UV (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH)
-//#define LIGHT_SIZE_UV 0.003
-#define NEAR_PLANE 9.5
+
 
 #define EPS 1e-3
 #define PI 3.141592653589793
@@ -109,9 +104,7 @@ float findBlocker( sampler2D shadowMap,  vec2 uv, float zReceiver ) {
   					// This uses similar triangles to compute what
 					// area of the shadow map we should search
           float bias=ShadowBias(vNormal,normalize(uLightPos));
-				//	float searchRadius = LIGHT_SIZE_UV ;
 					float searchRadius = 0.01;
-       // float searchRadius = LIGHT_SIZE_UV * ( zReceiver - NEAR_PLANE ) / zReceiver;
 					float blockerDepthSum = 0.0;
 					int numBlockers = 0;
 
@@ -183,8 +176,7 @@ float PCSS(sampler2D shadowMap, vec4 coords){
 	if( avgBlockerDepth == -1.0 ) return 1.0;
   // STEP 2: penumbra size
 	float penumbraRatio = penumbraSize( zReceiver, avgBlockerDepth );
-	float filterRadius = penumbraRatio ;
-  //float filterRadius = penumbraRatio * LIGHT_SIZE_UV * NEAR_PLANE / zReceiver;
+	float filterRadius = penumbraRatio;
   // STEP 3: filtering
  	//return avgBlockerDepth;
   float test_num=10.0;
