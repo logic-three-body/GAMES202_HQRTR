@@ -83,12 +83,47 @@ void uniformDiskSamples( const in vec2 randomSeed ) {
   }
 }
 
+float ShadowBias(vec3 normal,vec3 lightDir)
+{
+  return max(0.01*(1.0-max(dot(normal,lightDir),0.0)),0.006);
+ // return 1.0;
+}
+
+float useShadowMap(sampler2D shadowMap, vec4 shadowCoord){
+  shadowCoord=shadowCoord*0.5+0.5;//shadow between [0,1] NDC
+//  float bias=0.06;//constant test
+  float bias=ShadowBias(vNormal,normalize(uLightPos));
+  float closetDepth=texture2D(shadowMap,shadowCoord.xy).r;
+  float currentDepth=shadowCoord.z-bias;//相当于把点向上移动减小深度，参考RTR4 P237 Figure 7.13. || Yan老师 PDF P18
+  return currentDepth>closetDepth?0.0:1.0;
+}
+
 float findBlocker( sampler2D shadowMap,  vec2 uv, float zReceiver ) {
 	return 1.0;
 }
 
 float PCF(sampler2D shadowMap, vec4 coords) {
-  return 1.0;
+  //refer three.js master webgl-shadowmap_pcss 
+  float bias=ShadowBias(vNormal,normalize(uLightPos));
+  vec2 uv = coords.xy;
+	float zReceiver = coords.z; // Assumed to be eye-space z in this code
+  poissonDiskSamples(uv);
+  //uniformDiskSamples(uv);
+  float filter_radius=1.0;
+  float sum=0.0;
+  for(int i=0;i<PCF_NUM_SAMPLES;++i)
+  {
+    float depth=unpack(texture2D(shadowMap,uv+poissonDisk[i]*filter_radius));
+    if(zReceiver<=depth+bias) ++sum;
+  }
+  for(int i=0;i<PCF_NUM_SAMPLES;++i)
+  {
+    float depth=unpack(texture2D(shadowMap,uv-poissonDisk[i].yx*filter_radius));
+    if(zReceiver<=depth+bias) ++sum;
+  }
+
+  //return 1.0;
+  return sum/(2.0 * float( PCF_NUM_SAMPLES ));
 }
 
 float PCSS(sampler2D shadowMap, vec4 coords){
@@ -103,20 +138,7 @@ float PCSS(sampler2D shadowMap, vec4 coords){
 
 }
 
-float ShadowBias(vec3 normal,vec3 lightDir)
-{
-  return max(0.01*(1.0-max(dot(normal,lightDir),0.0)),0.006);
- // return 1.0;
-}
 
-float useShadowMap(sampler2D shadowMap, vec4 shadowCoord){
-  shadowCoord=shadowCoord*0.5+0.5;//shadow between [0,1] NDC
-//  float bias=0.06;//constant test
-  float bias=ShadowBias(vNormal,normalize(uLightPos));//constant test
-  float closetDepth=texture2D(shadowMap,shadowCoord.xy).r;
-  float currentDepth=shadowCoord.z-bias;//相当于把点向上移动减小深度，参考RTR4 P237 Figure 7.13. || Yan老师 PDF P18
-  return currentDepth>closetDepth?0.0:1.0;
-}
 
 vec3 blinnPhong() {
   vec3 color = texture2D(uSampler, vTextureCoord).rgb;
@@ -143,14 +165,14 @@ vec3 blinnPhong() {
 
 void main(void) {
 
-  float visibility;
+  float visibility=1.0;
   vec3 shadowCoord=vPositionFromLight.xyz;
-  visibility = useShadowMap(uShadowMap, vec4(shadowCoord, 1.0));
-  //visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0));
+  //visibility = useShadowMap(uShadowMap, vec4(shadowCoord, 1.0));
+  visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0));
   //visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
 
   vec3 phongColor = blinnPhong();
-
+ // gl_FragColor=vec4(texture2D(uShadowMap,shadowCoord.xy).rrr,1);
   gl_FragColor = vec4(phongColor * visibility, 1.0);
   //gl_FragColor = vec4(phongColor, 1.0);
 }
