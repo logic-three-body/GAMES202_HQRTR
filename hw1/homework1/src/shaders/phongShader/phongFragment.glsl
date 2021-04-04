@@ -103,11 +103,17 @@ float PCSS(sampler2D shadowMap, vec4 coords){
 
 }
 
+float ShadowBias(vec3 normal,vec3 lightDir)
+{
+  return max(0.01*(1.0-max(dot(normal,lightDir),0.0)),0.006);
+ // return 1.0;
+}
 
 float useShadowMap(sampler2D shadowMap, vec4 shadowCoord){
-  shadowCoord=shadowCoord*0.5+0.5;//shadow between [0,1]
+  shadowCoord=shadowCoord*0.5+0.5;//shadow between [0,1] NDC
+  float bias=0.06;//constant test
   float closetDepth=texture2D(shadowMap,shadowCoord.xy).r;
-  float currentDepth=shadowCoord.z;
+  float currentDepth=shadowCoord.z-bias;
   return currentDepth>closetDepth?0.0:1.0;
 }
 
