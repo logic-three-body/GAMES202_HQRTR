@@ -20,11 +20,12 @@ varying highp vec3 vNormal;
 #define PCF_NUM_SAMPLES NUM_SAMPLES
 #define NUM_RINGS 10
 
-//FOR filter_radius blocksearch
-#define NEAR_PLANE 0.5
-#define LIGHT_WORLD_SIZE 0.5
-#define LIGHT_FRUSTUM_WIDTH 9.0
-#define LIGHT_SIZE_UV (LIGHT_WORLD_SIZE/LIGHT_FRUSTUM_WIDTH)
+//FOR filter_radius blocksearch -> lightsize and receiver's distance from light 
+#define LIGHT_WORLD_SIZE 0.005
+#define LIGHT_FRUSTUM_WIDTH 3.75
+#define LIGHT_SIZE_UV (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH)
+//#define LIGHT_SIZE_UV 0.003
+#define NEAR_PLANE 9.5
 
 #define EPS 1e-3
 #define PI 3.141592653589793
@@ -107,14 +108,17 @@ float useShadowMap(sampler2D shadowMap, vec4 shadowCoord){
 float findBlocker( sampler2D shadowMap,  vec2 uv, float zReceiver ) {
   					// This uses similar triangles to compute what
 					// area of the shadow map we should search
-					float searchRadius = LIGHT_SIZE_UV * ( zReceiver - NEAR_PLANE ) / zReceiver;
+          float bias=ShadowBias(vNormal,normalize(uLightPos));
+				//	float searchRadius = LIGHT_SIZE_UV ;
+					float searchRadius = 0.01;
+       // float searchRadius = LIGHT_SIZE_UV * ( zReceiver - NEAR_PLANE ) / zReceiver;
 					float blockerDepthSum = 0.0;
 					int numBlockers = 0;
 
 					for( int i = 0; i < BLOCKER_SEARCH_NUM_SAMPLES; i++ ) {
 						float shadowMapDepth = unpack(texture2D(shadowMap, uv + poissonDisk[i] * searchRadius));
-						if ( shadowMapDepth < zReceiver ) {
-							blockerDepthSum += shadowMapDepth;
+						if ( shadowMapDepth+bias < zReceiver ) {
+							blockerDepthSum += shadowMapDepth+bias;
 							numBlockers ++;
 						}
 					}
@@ -159,11 +163,11 @@ float PCF(sampler2D shadowMap, vec2 uv, float zReceiver, float filterRadius ) {
           float bias=ShadowBias(vNormal,normalize(uLightPos));
 					for( int i = 0; i < PCF_NUM_SAMPLES; i ++ ) {
 						float depth = unpack( texture2D( shadowMap, uv + poissonDisk[ i ] * filterRadius ) );
-						if( zReceiver <= depth+bias ) sum += 1.0;
+						if( zReceiver <= depth+bias ) sum ++;
 					}
 					for( int i = 0; i < PCF_NUM_SAMPLES; i ++ ) {
-						float depth = unpack( texture2D( shadowMap, uv + -poissonDisk[ i ].yx * filterRadius ) );
-						if( zReceiver <= depth+bias ) sum += 1.0;
+						float depth = unpack( texture2D( shadowMap, uv  -poissonDisk[ i ].yx * filterRadius ) );
+						if( zReceiver <= depth+bias ) sum ++;
 					}
 					return sum / ( 2.0 * float( PCF_NUM_SAMPLES ) );
 }
@@ -179,10 +183,11 @@ float PCSS(sampler2D shadowMap, vec4 coords){
 	if( avgBlockerDepth == -1.0 ) return 1.0;
   // STEP 2: penumbra size
 	float penumbraRatio = penumbraSize( zReceiver, avgBlockerDepth );
-	float filterRadius = penumbraRatio * LIGHT_SIZE_UV * NEAR_PLANE / zReceiver;
+	float filterRadius = penumbraRatio ;
+  //float filterRadius = penumbraRatio * LIGHT_SIZE_UV * NEAR_PLANE / zReceiver;
   // STEP 3: filtering
  	//return avgBlockerDepth;
-  float test_num=1.0;
+  float test_num=10.0;
 	return PCF( shadowMap, uv, zReceiver, filterRadius/test_num ); 
   //return 1.0;
 
