@@ -134,16 +134,16 @@ float PCF(sampler2D shadowMap, vec4 coords) {
 	float zReceiver = coords.z; // Assumed to be eye-space z in this code
   poissonDiskSamples(uv);
   //uniformDiskSamples(uv);
-  float filter_radius=1.0;
+  float filter_radius=5.0;
   float sum=0.0;
   for(int i=0;i<PCF_NUM_SAMPLES;++i)
   {
-    float depth=unpack(texture2D(shadowMap,uv+poissonDisk[i]/float(PCF_NUM_SAMPLES)*filter_radius));
+    float depth=unpack(texture2D(shadowMap,uv+poissonDisk[i]/float(PCF_NUM_SAMPLES)/filter_radius));
     if(zReceiver<=depth+bias) ++sum;
   }
   for(int i=0;i<PCF_NUM_SAMPLES;++i)
   {
-    float depth=unpack(texture2D(shadowMap,uv-poissonDisk[i].yx/float(PCF_NUM_SAMPLES)*filter_radius));
+    float depth=unpack(texture2D(shadowMap,uv-poissonDisk[i].yx/float(PCF_NUM_SAMPLES)/filter_radius));
     if(zReceiver<=depth+bias) ++sum;
   }
 
@@ -179,7 +179,7 @@ float PCSS(sampler2D shadowMap, vec4 coords){
 	float filterRadius = penumbraRatio;
   // STEP 3: filtering
  	//return avgBlockerDepth;
-  float test_num=10.0;
+  float test_num=10.0;//test_num用于测试传入PCF的最佳滤波半径
 	return PCF( shadowMap, uv, zReceiver, filterRadius/test_num ); 
   //return 1.0;
 
@@ -215,8 +215,8 @@ void main(void) {
   float visibility=1.0;
   vec3 shadowCoord=vPositionFromLight.xyz;
   //visibility = useShadowMap(uShadowMap, vec4(shadowCoord, 1.0));
- // visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0));
-  visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
+  visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0));
+  //visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
 
   vec3 phongColor = blinnPhong();
  // gl_FragColor=vec4(texture2D(uShadowMap,shadowCoord.xy).rrr,1);
