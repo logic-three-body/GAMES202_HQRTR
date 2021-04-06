@@ -215,11 +215,11 @@ void main(void) {
   float visibility=1.0;
   vec3 shadowCoord=vPositionFromLight.xyz;
   //visibility = useShadowMap(uShadowMap, vec4(shadowCoord, 1.0));
-  visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0));
-  //visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
+  //visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0));
+  visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
 
   vec3 phongColor = blinnPhong();
- // gl_FragColor=vec4(texture2D(uShadowMap,shadowCoord.xy).rrr,1);
+  //gl_FragColor=vec4(texture2D(uShadowMap,shadowCoord.xy).rrr,1);
   gl_FragColor = vec4(phongColor * visibility, 1.0);
   //gl_FragColor = vec4(phongColor, 1.0);
 }
