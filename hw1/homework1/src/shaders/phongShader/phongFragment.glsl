@@ -122,8 +122,8 @@ float findBlocker( sampler2D shadowMap,  vec2 uv, float zReceiver ) {
 	//return 1.0;
 }
 
-float penumbraSize( const in float zReceiver, const in float zBlocker ) { // Parallel plane estimation
-					return (zReceiver - zBlocker) / zBlocker;
+float penumbraSize( const in float zReceiver, const in float zBlocker,const in float wlight ) { // Parallel plane estimation
+          return (zReceiver - zBlocker) *wlight/ zBlocker;
 				}
 
 float PCF(sampler2D shadowMap, vec4 coords) {
@@ -175,7 +175,8 @@ float PCSS(sampler2D shadowMap, vec4 coords){
   //There are no occluders so early out (this saves filtering)
 	if( avgBlockerDepth == -1.0 ) return 1.0;
   // STEP 2: penumbra size
-	float penumbraRatio = penumbraSize( zReceiver, avgBlockerDepth );
+  const float wlight=1.0;
+	float penumbraRatio = penumbraSize( zReceiver, avgBlockerDepth,wlight );
 	float filterRadius = penumbraRatio;
   // STEP 3: filtering
  	//return avgBlockerDepth;
