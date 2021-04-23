@@ -9,12 +9,12 @@
 		<string name="type" value="shadowed" />
 		<integer name="bounce" value="1" />
 		<integer name="PRTSampleCount" value="100" />
-		<string name="cubemap" value="cubemap/Indoor" />
+		<string name="cubemap" value="scenes/cubemap/Indoor" />
 	</integrator>
 
     <!-- Load the Stanford bunny (https://graphics.stanford.edu/data/3Dscanrep/) -->
 	<mesh type="obj">
-		<string name="filename" value="mary.obj"/>
+		<string name="filename" value="scenes/mary.obj"/>
 		<bsdf type="diffuse"/>
 	</mesh>
 
