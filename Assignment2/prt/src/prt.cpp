@@ -218,13 +218,18 @@ public:
                 {
                     // TODO: here you need to calculate unshadowed transport term of a given direction
                     // TODO: 此处你需要计算给定方向下的unshadowed传输项球谐函数值
-                    return 0;
+                    return std::max(wi.dot(n),0.0f);
                 }
                 else
                 {
                     // TODO: here you need to calculate shadowed transport term of a given direction
                     // TODO: 此处你需要计算给定方向下的shadowed传输项球谐函数值
-                    return 0;
+					double vis = 0;
+					if (i%2!=0)
+					{
+						vis = 1;
+					}
+                    return vis*std::max(wi.dot(n), 0.0f);
                 }
             };
             auto shCoeff = sh::ProjectFunction(SHOrder, shFunc, m_SampleCount);
