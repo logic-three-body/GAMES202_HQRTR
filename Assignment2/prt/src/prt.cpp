@@ -224,34 +224,23 @@ public:
                 {
                     // TODO: here you need to calculate shadowed transport term of a given direction
                     // TODO: 此处你需要计算给定方向下的shadowed传输项球谐函数值
-
 					float H = wi.dot(n);
-					//double result = 0.0;
-					//if (H > 0.0)//上半球
-					//{
-					//	Ray3f ray(v, wi.normalized());
-					//	double vis = 0.0;
-					//	if (scene->rayIntersect(ray))
-					//	{
-					//		vis = 0.0;
-					//	}
-					//	else
-					//	{
-					//		vis = 1.0;
-					//	}
-					//	result = vis * std::max(H, 0.0f);
-					//}		
-     //               return result;
-
-					if (H>0.0)
+					double result = 0.0;
+					if (H > 0.0)//上半球
 					{
-						Ray3f ray(v.normalized(), wi.normalized());
-						if (!scene->rayIntersect(ray))
+						Ray3f ray(v, wi.normalized());
+						double vis = 0.0;
+						if (scene->rayIntersect(ray))
 						{
-							return std::max(H, 0.0f);
+							vis = 0.0;
 						}
-					}
-					return 0.0;
+						else
+						{
+							vis = 1.0;
+						}
+						result = vis * std::max(H, 0.0f);
+					}		
+                    return result;
                 }
             };
             auto shCoeff = sh::ProjectFunction(SHOrder, shFunc, m_SampleCount);
