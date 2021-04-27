@@ -10,7 +10,7 @@
 #include <stb_image.h>
 
 NORI_NAMESPACE_BEGIN
-
+const auto PI = 3.14159265;
 namespace ProjEnv
 {
     std::vector<std::unique_ptr<float[]>>
@@ -116,7 +116,7 @@ namespace ProjEnv
         std::vector<Eigen::Array3f> SHCoeffiecents(SHNum);
         for (int i = 0; i < SHNum; i++)
             SHCoeffiecents[i] = Eigen::Array3f(0);
-        float sumWeight = 0;
+        float sumWeight = 4.0 * PI;//权重数
         for (int i = 0; i < 6; i++)
         {
             for (int y = 0; y < height; y++)
@@ -136,7 +136,7 @@ namespace ProjEnv
 						{
 							for (int m = -l; m <= l; m++)//对称
 							{
-								SHCoeffiecents[sh::GetIndex(l,m)] += (float)(sh::EvalSH(l, m, dir.cast<double>().normalized()))*Le*Wi/SHNum/SHOrder;
+								SHCoeffiecents[sh::GetIndex(l,m)] += (float)(sh::EvalSH(l, m, dir.cast<double>().normalized()))*Le*Wi/sumWeight;
 							}
 						}
 					}
