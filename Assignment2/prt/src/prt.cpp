@@ -224,23 +224,34 @@ public:
                 {
                     // TODO: here you need to calculate shadowed transport term of a given direction
                     // TODO: 此处你需要计算给定方向下的shadowed传输项球谐函数值
+
 					float H = wi.dot(n);
-					double result = 0.0;
-					if (H > 0.0)//上半球
+					//double result = 0.0;
+					//if (H > 0.0)//上半球
+					//{
+					//	Ray3f ray(v, wi.normalized());
+					//	double vis = 0.0;
+					//	if (scene->rayIntersect(ray))
+					//	{
+					//		vis = 0.0;
+					//	}
+					//	else
+					//	{
+					//		vis = 1.0;
+					//	}
+					//	result = vis * std::max(H, 0.0f);
+					//}		
+     //               return result;
+
+					if (H>0.0)
 					{
-						Ray3f ray(v, wi.normalized());
-						double vis = 0.0;
-						if (scene->rayIntersect(ray))
+						Ray3f ray(v.normalized(), wi.normalized());
+						if (!scene->rayIntersect(ray))
 						{
-							vis = 0.0;
+							return std::max(H, 0.0f);
 						}
-						else
-						{
-							vis = 1.0;
-						}
-						result = vis * std::max(H, 0.0f);
-					}		
-                    return result;
+					}
+					return 0.0;
                 }
             };
             auto shCoeff = sh::ProjectFunction(SHOrder, shFunc, m_SampleCount);
@@ -299,10 +310,10 @@ public:
         // TODO: you need to delete the following four line codes after finishing your calculation to SH,
         //       we use it to visualize the normals of model for debug.
         // TODO: 在完成了球谐系数计算后，你需要删除下列四行，这四行代码的作用是用来可视化模型法线
-        if (c.isZero()) {
-            auto n_ = its.shFrame.n.cwiseAbs();
-            return Color3f(n_.x(), n_.y(), n_.z());
-        }
+        //if (c.isZero()) {
+        //    auto n_ = its.shFrame.n.cwiseAbs();
+        //    return Color3f(n_.x(), n_.y(), n_.z());
+        //}
         return c;
     }
 
