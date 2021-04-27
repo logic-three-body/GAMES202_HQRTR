@@ -224,21 +224,17 @@ public:
                 {
                     // TODO: here you need to calculate shadowed transport term of a given direction
                     // TODO: 此处你需要计算给定方向下的shadowed传输项球谐函数值
-					Ray3f ray(v,-wi);
+					Ray3f ray(v,wi);
 					double vis = 0.0;
 					if (scene->rayIntersect(ray))
 					{
-						vis = 1.0;
+						vis = 0.0;
 					}
 					else
 					{
-						vis = 0.0;
+						vis = 1.0;
 					}
 					double result = vis * std::max(wi.dot(n), 0.0f);
-					if (result<0)
-					{
-						result = 0;
-					}
                     return result;
                 }
             };
