@@ -130,13 +130,17 @@ namespace ProjEnv
                     Eigen::Array3f Le(images[i][index + 0], images[i][index + 1],
                                       images[i][index + 2]);
 					float Wi = CalcArea((float)x,(float)y,width,height);
-					for (int l = 0; l <= (int)SHOrder; l++)
+					for (int s = 0; s < SHNum; s++)
 					{
-						for (int m = -l; m <= l; m++)//对称
+						for (int l = 0; l <= (int)SHOrder; l++)
 						{
-							SHCoeffiecents[i] += (float)(sh::EvalSH(l, m, dir.cast<double>().normalized()))*Le*Wi;
+							for (int m = -l; m <= l; m++)//对称
+							{
+								SHCoeffiecents[sh::GetIndex(l,m)] += (float)(sh::EvalSH(l, m, dir.cast<double>().normalized()))*Le*Wi/SHNum/SHOrder;
+							}
 						}
 					}
+
                 }
             }
         }
@@ -228,7 +232,7 @@ public:
 					double result = 0.0;
 					if (H > 0.0)//上半球
 					{
-						Ray3f ray(v, wi.normalized());
+						Ray3f ray(v, wi);
 						double vis = 0.0;
 						if (scene->rayIntersect(ray))
 						{
