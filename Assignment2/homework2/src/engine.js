@@ -114,8 +114,8 @@ async function GAMES202Main() {
 	// }
 
 	// TODO: load model - Add your Material here
-	// loadOBJ(renderer, 'assets/bunny/', 'bunny', 'addYourPRTMaterial', boxTransform);
-	// loadOBJ(renderer, 'assets/bunny/', 'bunny', 'addYourPRTMaterial', box2Transform);
+	loadOBJ(renderer, 'assets/bunny/', 'bunny', 'PhongMaterial', boxTransform);
+	loadOBJ(renderer, 'assets/bunny/', 'bunny', 'PhongMaterial', box2Transform);
 
 	function createGUI() {
 		const gui = new dat.gui.GUI();
