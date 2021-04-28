@@ -6,7 +6,7 @@ class PRTMaterial extends Material{
             'aPrecomputeLG': { type: 'matrix3fv', value: precomputeLG },
             'aPrecomputeLB': { type: 'matrix3fv', value: precomputeLB },
             
-        },['aPrecomputeLT'],vertexShader,fragmentShader,null);
+        }, ['aPrecomputeLT'], vertexShader, fragmentShader, null);
     }
 }
 
@@ -15,7 +15,10 @@ async function buildPRTMaterial(vertexPath,fragmentPath)
     let vertexShader = await getShaderString(vertexPath);
     let fragmentShader = await getShaderString(fragmentPath);
 
-    console("v" + vertexPath);
+    let precomputeLR=[] ;
+    let precomputeLB=[] ;
+    let precomputeLG=[] ;
+    console.log("v" + vertexPath);
     for (let i = 0; i < 3; ++i)
     {
         precomputeLR[i] = [];
