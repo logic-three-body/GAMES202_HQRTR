@@ -1,9 +1,10 @@
 class PRTMaterial extends Material{
     constructor(precomputeLR, precomputeLG, precomputeLB,precomputeL, vertexShader, fragmentShader)
     {
-        console.log('precomputeLR'+precomputeLR);
-        console.log('precomputeLG'+precomputeLG);
-        console.log('precomputeLB'+precomputeLB);
+        console.log('precomputeLR '+precomputeLR);
+        console.log('precomputeLG '+precomputeLG);
+        console.log('precomputeLB ' + precomputeLB);
+        console.log('precomputeL '+precomputeL);
         super({
             'aPrecomputeLR': { type: 'matrix3fv', value: precomputeLR },
             'aPrecomputeLG': { type: 'matrix3fv', value: precomputeLG },

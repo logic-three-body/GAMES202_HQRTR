@@ -7,9 +7,9 @@ uniform mat4 uModelMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
 
-uniform mat3 PrecomputeLR;
-uniform mat3 PrecomputeLG;
-uniform mat3 PrecomputeLB;
+uniform mat3 aPrecomputeLR;
+uniform mat3 aPrecomputeLG;
+uniform mat3 aPrecomputeLB;
 
 varying highp vec2 vTextureCoord;
 varying highp vec3 vFragPos;
@@ -30,10 +30,10 @@ void main(void)
     float b=0.0;
     for(int i=0;i<3;++i)
     {
-        r+=dot(aPrecomputeLT[i],PrecomputeLR[i]);
-        g+=dot(aPrecomputeLT[i],PrecomputeLG[i]);
-        b+=dot(aPrecomputeLT[i],PrecomputeLB[i]);       
+        r+=dot(aPrecomputeLT[i],aPrecomputeLR[i]);
+        g+=dot(aPrecomputeLT[i],aPrecomputeLG[i]);
+        b+=dot(aPrecomputeLT[i],aPrecomputeLB[i]);       
     }
     
-    vColor=vec4(1.0,0.0,0.0,1.0);
+    vColor=vec4(r,g,b,1.0);
 }
