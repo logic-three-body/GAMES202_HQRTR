@@ -16,10 +16,7 @@ varying highp vec3 vFragPos;
 varying highp vec3 vNormal;
 varying highp vec4 vColor;
 
-float calcuComponent(mat3 v1,mat3 v2)
-{
-    return (v1[0][0]+v1[1][1]+v1[2][2])/3.0;
-}
+
 
 void main(void)
 {
@@ -28,9 +25,15 @@ void main(void)
     gl_Position = uProjectionMatrix * uViewMatrix * uModelMatrix *
                 vec4(aVertexPosition, 1.0);
 
-    float r=dot(aPrecomputeLT[0],PrecomputeLR[0])+dot(aPrecomputeLT[1],PrecomputeLR[1])+dot(aPrecomputeLT[2],PrecomputeLR[2]);
-    float g=dot(aPrecomputeLT[0],PrecomputeLG[0])+dot(aPrecomputeLT[1],PrecomputeLG[1])+dot(aPrecomputeLT[2],PrecomputeLG[2]);
-    float b=dot(aPrecomputeLT[0],PrecomputeLB[0])+dot(aPrecomputeLT[1],PrecomputeLB[1])+dot(aPrecomputeLT[2],PrecomputeLB[2]);
+    float r=0.0;
+    float g=0.0;
+    float b=0.0;
+    for(int i=0;i<3;++i)
+    {
+        r+=dot(aPrecomputeLT[i],PrecomputeLR[i]);
+        g+=dot(aPrecomputeLT[i],PrecomputeLG[i]);
+        b+=dot(aPrecomputeLT[i],PrecomputeLB[i]);       
+    }
     
-    vColor=vec4(r,g,b,1.0);
+    vColor=vec4(1.0,0.0,0.0,1.0);
 }
