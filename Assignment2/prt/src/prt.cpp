@@ -320,8 +320,8 @@ public:
 		else
 		{
 			//get point info OR dir transcoef
-			Eigen::Vector3f position = Vector3f(0.0);
-			Eigen::Vector3f normal = Vector3f(0.0);
+			Eigen::Vector3f position = Vector3f(0.0f);
+			Eigen::Vector3f normal = Vector3f(0.0f);
 			Eigen::VectorXf direct_coef;
 			direct_coef.setZero(SHCoeffLength);
 			for (size_t i = 0; i < 3; i++)
@@ -330,6 +330,42 @@ public:
 				position += inter.mesh->getVertexPositions().col(tid)*inter.bary[i];
 				normal += inter.mesh->getVertexNormals().col(tid)*inter.bary[i];
 				direct_coef += m_TransportSHCoeffs.col(tid)*inter.bary[i];
+			}
+			normal.normalize();
+
+			//geometry term
+			float geoIn = std::max(0.0f, normal.dot(-ray.d));
+			direct_coef *= geoIn;
+			if (0==geoIn)//Invaild value
+			{
+				return direct_coef;
+			}
+			else
+			{
+				Eigen::VectorXf indirectCoef;
+				indirectCoef.setZero(SHCoeffLength);
+
+				//random ray
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_real_distribution<>rng(-1.0, 1.0);
+				Vector3f dir(rng(gen),rng(gen),rng(gen));
+				dir.normalize();
+				nori::Ray3f nextRay(position,dir);
+
+				//vaildate ray
+				float geoOut = std::max(0.0f, normal.dot(nextRay.d));
+				if (0!=geoOut)
+				{
+					//get ray or indirect transcoef
+					nori::Intersection nextInter;
+					if (scene->rayIntersect(nextRay,nextInter))
+					{
+						indirectCoef = getInterReflection(nextInter, nextRay, depth + 1, scene);
+					}
+					indirectCoef *= geoOut;
+				}
+				return direct_coef + indirectCoef;
 			}
 		}
 

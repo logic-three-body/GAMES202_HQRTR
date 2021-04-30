@@ -1,4 +1,4 @@
 我完成了作业中所有基础部分
 image文件夹说明
 PRT_Shadowed目录和PRT_Unshadowed目录是利用nori C++预计算出来的结果图片
-WebGL中的PRT_Unshadowed目录和PRTPRT_Shadowed目录是实时实时球谐光照计算的截图
+WebGL中的PRT_Shadowed目录是实时实时球谐光照计算的截图
