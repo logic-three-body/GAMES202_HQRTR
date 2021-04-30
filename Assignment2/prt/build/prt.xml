@@ -7,7 +7,7 @@
     <!-- Render the visible surface normals -->
     <integrator type="prt">
 		<string name="type" value="interreflection" />
-		<integer name="bounce" value="10" />
+		<integer name="bounce" value="2" />
 		<integer name="PRTSampleCount" value="100" />
 		<string name="cubemap" value="scenes/cubemap/GraceCathedral" />
 	</integrator>
@@ -31,7 +31,7 @@
 		<float name="fov" value="20"/>
 
 		<!-- 768 x 768 pixels -->
-		<integer name="width" value="1024"/>
-		<integer name="height" value="1024"/>
+		<integer name="width" value="768"/>
+		<integer name="height" value="768"/>
 	</camera>
 </scene>

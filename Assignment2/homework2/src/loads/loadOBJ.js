@@ -62,7 +62,7 @@ function loadOBJ(renderer, path, name, objMaterial, transform) {
 									console.log('guiParams.envmapID'+guiParams.envmapId);
 									console.log('precomputeL[0]' + precomputeL[0]);
 									//var index = guiParams.envmapId+1;
-									var index = 2;
+									var index = 0;
 									console.log('index '+index);
 									material = buildPRTMaterial(precomputeL[index],"./src/shaders/PRTShader/VertexShader.glsl", "./src/shaders/PRTShader/FragmentShader.glsl");
 									break;
