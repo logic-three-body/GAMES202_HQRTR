@@ -117,7 +117,7 @@ async function GAMES202Main() {
 	console.log('precomputeL[0] in engine: ' + precomputeL[0]);
 
 	// TODO: load model - Add your Material here
-	loadOBJ(renderer, 'assets/bunny/', 'bunny', 'PRTMaterial', boxTransform);
+	loadOBJ(renderer, 'assets/mary/', 'mary', 'PRTMaterial', boxTransform);
 	//loadOBJ(renderer, 'assets/bunny/', 'bunny', 'PhongMaterial', box2Transform);
 
 	function createGUI() {

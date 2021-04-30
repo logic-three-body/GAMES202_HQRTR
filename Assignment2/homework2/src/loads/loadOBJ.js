@@ -60,8 +60,10 @@ function loadOBJ(renderer, path, name, objMaterial, transform) {
 								// TODO: Add your PRTmaterial here
 								case 'PRTMaterial':
 									console.log('guiParams.envmapID'+guiParams.envmapId);
-									console.log('precomputeL[0]'+ precomputeL[0]);
-									material = buildPRTMaterial(precomputeL[0],"./src/shaders/PRTShader/VertexShader.glsl", "./src/shaders/PRTShader/FragmentShader.glsl");
+									console.log('precomputeL[0]' + precomputeL[0]);
+									var index = guiParams.envmapId;
+									console.log('index '+index);
+									material = buildPRTMaterial(precomputeL[index],"./src/shaders/PRTShader/VertexShader.glsl", "./src/shaders/PRTShader/FragmentShader.glsl");
 									break;
 								case 'SkyBoxMaterial':
 									material = buildSkyBoxMaterial("./src/shaders/skyBoxShader/SkyBoxVertex.glsl", "./src/shaders/skyBoxShader/SkyBoxFragment.glsl");
