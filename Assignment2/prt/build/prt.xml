@@ -6,7 +6,7 @@
 
     <!-- Render the visible surface normals -->
     <integrator type="prt">
-		<string name="type" value="shadowed" />
+		<string name="type" value="unshadowed" />
 		<integer name="bounce" value="1" />
 		<integer name="PRTSampleCount" value="100" />
 		<string name="cubemap" value="scenes/cubemap/CornellBox" />
