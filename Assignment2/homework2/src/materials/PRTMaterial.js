@@ -4,11 +4,12 @@ class PRTMaterial extends Material{
         console.log('precomputeLR '+precomputeLR);
         console.log('precomputeLG '+precomputeLG);
         console.log('precomputeLB ' + precomputeLB);
-        console.log('precomputeL '+precomputeL);
+        console.log('precomputeL ' + precomputeL);
+        let lightColor = getMat3ValueFromRGB(precomputeL);
         super({
-            'aPrecomputeLR': { type: 'matrix3fv', value: precomputeLR },
-            'aPrecomputeLG': { type: 'matrix3fv', value: precomputeLG },
-            'aPrecomputeLB': { type: 'matrix3fv', value: precomputeLB },
+            'aPrecomputeLR': { type: 'matrix3fv', value: lightColor[0] },
+            'aPrecomputeLG': { type: 'matrix3fv', value: lightColor[1] },
+            'aPrecomputeLB': { type: 'matrix3fv', value:  lightColor[2] },
             
         }, ['aPrecomputeLT'], vertexShader, fragmentShader, null);
     }
