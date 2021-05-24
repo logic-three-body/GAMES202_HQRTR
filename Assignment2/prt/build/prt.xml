@@ -14,7 +14,7 @@
 
     <!-- Load the Stanford bunny (https://graphics.stanford.edu/data/3Dscanrep/) -->
 	<mesh type="obj">
-		<string name="filename" value="scenes/mary.obj"/>
+		<string name="filename" value="scenes/bunny.obj"/>
 		<bsdf type="diffuse"/>
 	</mesh>
 

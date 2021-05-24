@@ -117,8 +117,8 @@ async function GAMES202Main() {
 	console.log('precomputeL[0] in engine: ' + precomputeL[0]);
 
 	// TODO: load model - Add your Material here
-	loadOBJ(renderer, 'assets/mary/', 'mary', 'PRTMaterial', boxTransform);
-	//loadOBJ(renderer, 'assets/bunny/', 'bunny', 'PhongMaterial', box2Transform);
+	//loadOBJ(renderer, 'assets/mary/', 'mary', 'PRTMaterial', boxTransform);
+	loadOBJ(renderer, 'assets/bunny/', 'bunny', 'PRTMaterial', box2Transform);
 
 	function createGUI() {
 		const gui = new dat.gui.GUI();
