@@ -9,3 +9,6 @@ Assignment2/prt/build/CMakeFiles/
 Assignment2/homework2/assets/
 Assignment2/prt/build/ext_build/
 Assignment2/prt/build/scenes/
+*.pdf
+homework3/assets/
+homework3/lib/
