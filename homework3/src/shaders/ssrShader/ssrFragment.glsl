@@ -200,7 +200,7 @@ vec3 dirToWorld(vec3 normal,vec3 localDir)
   return tbn*localDir;
 }
 
-#define SAMPLE_NUM 10
+#define SAMPLE_NUM 1
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
@@ -221,7 +221,8 @@ void main() {
     vec3 wo = normalize(uCameraPos - worldPos);
     vec3 brdf0 = EvalDiffuse(wi,wo,uv0);
     vec3 hitPos = vec3(0.0);
-    bool isHit = RayMarch(worldPos,wi,hitPos);
+    bool isHit = true;
+    isHit=RayMarch(worldPos,wi,hitPos);
     if(isHit)
     {
       vec2 uv1 = GetScreenCoordinate(hitPos);
