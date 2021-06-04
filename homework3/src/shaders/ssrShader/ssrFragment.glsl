@@ -208,7 +208,7 @@ void main() {
   vec3 worldPos = vPosWorld.xyz;
   vec2 uv0 = GetScreenCoordinate(worldPos);
   vec3 dirL = EvalDirectionalLight(uv0);
-  //L += GetGBufferDiffuse(GetScreenCoordinate(vPosWorld.xyz));
+ // L += GetGBufferDiffuse(GetScreenCoordinate(vPosWorld.xyz));
   L+=dirL;
   vec3 normal = GetGBufferNormalWorld(uv0);
   vec3 inDirL_col = vec3(0.0);
