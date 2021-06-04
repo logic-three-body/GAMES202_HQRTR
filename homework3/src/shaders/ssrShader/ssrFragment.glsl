@@ -122,7 +122,17 @@ vec3 GetGBufferDiffuse(vec2 uv) {
  *
  */
 vec3 EvalDiffuse(vec3 wi, vec3 wo, vec2 uv) {
+  vec3 normal = normalize(GetGBufferNormalWorld(uv));
+  const float value =0.65;
   vec3 L = vec3(0.0);
+  if(dot(normal,wi)>0.0)
+  {
+    L = vec3(value)/M_PI;
+  }
+  else
+  {
+    L = vec3(0.0);
+  }
   return L;
 }
 
@@ -133,21 +143,70 @@ vec3 EvalDiffuse(vec3 wi, vec3 wo, vec2 uv) {
  */
 vec3 EvalDirectionalLight(vec2 uv) {
   vec3 Le = vec3(0.0);
+  vec3 Posworld = GetGBufferPosWorld(uv);
+  float shadow_coef = GetGBufferuShadow(uv);
+  vec3 diff_col = GetGBufferDiffuse(uv);
+  if(shadow_coef>0.0)
+  {
+    vec3 normal = normalize(GetGBufferNormalWorld(uv));
+    vec3 lightDir = normalize(uLightDir);
+    float diff = max(dot(lightDir,normal),0.0);
+    Le= diff_col*diff;
+  }
+  else
+  {
+    Le=vec3(0.0);
+  }
   return Le;
 }
 
 bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
+  int step=1;
+  vec3 endPoint = ori;
+  for(int i=0;i<5;++i)
+  {
+    vec3 testPoint = endPoint + float(step)*dir;
+    if(step>100)
+    {
+      return false;
+    }
+    else if(GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint))<1e-4)
+    {
+      hitPos = testPoint;
+      return true;
+    }
+    else if(GetDepth(testPoint)<GetGBufferDepth(GetScreenCoordinate(testPoint)))
+    {
+      step*=2;
+    }
+    else if(GetDepth(testPoint)>GetGBufferDepth(GetScreenCoordinate(testPoint)))
+    {
+      step/=2;
+    }
+  }
   return false;
+}
+
+vec3 dirToWorld(vec3 normal,vec3 localDir)
+{
+  vec3 b1=vec3(0.0);
+  vec3 b2=vec3(0.0);
+  LocalBasis(normal,b1,b2);
+  mat3 tbn = mat3(b1,b2,normal);
+  return tbn*localDir;
 }
 
 #define SAMPLE_NUM 1
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
-
-  vec3 L = vec3(0.0);
-
-  L = GetGBufferDiffuse(GetScreenCoordinate(vPosWorld.xyz));
+  vec3 L = vec3(0.001);
+  vec3 worldPos = vPosWorld.xyz;
+  vec2 uv0 = GetScreenCoordinate(worldPos);
+  vec3 dirL = EvalDirectionalLight(uv0);
+  //L = GetGBufferDiffuse(GetScreenCoordinate(vPosWorld.xyz));
+  L+=dirL;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
+  //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
 }
