@@ -121,6 +121,10 @@ vec3 GetGBufferDiffuse(vec2 uv) {
  * uv is in screen space, [0, 1] x [0, 1].
  *
  */
+ /*
+wi:dir
+wo:camera_pos-shading_point
+ */
 vec3 EvalDiffuse(vec3 wi, vec3 wo, vec2 uv) {
   vec3 normal = normalize(GetGBufferNormalWorld(uv));
   const float value =0.65;
@@ -206,6 +210,27 @@ void main() {
   vec3 dirL = EvalDirectionalLight(uv0);
   //L = GetGBufferDiffuse(GetScreenCoordinate(vPosWorld.xyz));
   L+=dirL;
+  vec3 normal = GetGBufferNormalWorld(uv0);
+  vec3 inDirL_col = vec3(0.0);
+  for(int i=0;i<SAMPLE_NUM;++i)
+  {
+    float pdf;
+    //vec3 dir = SampleHemisphereCos(s,pdf);
+    vec3 dir = SampleHemisphereUniform(s,pdf);
+    vec3 wi = normalize(dir);
+    vec3 wo = normalize(uCameraPos - worldPos);
+    vec3 brdf0 = EvalDiffuse(wi,wo,uv0);
+    vec3 hitPos = vec3(0.0);
+    bool isHit = RayMarch(worldPos,wi,hitPos);
+    if(isHit)
+    {
+      vec2 uv1 = GetScreenCoordinate(hitPos);
+      vec3 inDirL = brdf0 * EvalDiffuse(-wi,wo,uv1) * EvalDirectionalLight(uv1) /pdf;
+      inDirL_col += inDirL;
+    }
+  }
+  inDirL_col /= float(SAMPLE_NUM);
+  L+=inDirL_col;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
