@@ -201,6 +201,7 @@ bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
     float dist = uv_depth - depth;
     if(abs(dist) < 1e-4)//equal
     {
+      hitPos=pos;
       return true;
     }
   }
@@ -300,7 +301,7 @@ void main() {
     dir = dirToWorld(normal,dir);
     vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
     vec3 hitPos=vec3(0.0);
-    if(RayMarch2(worldPos,-wi,hitPos))
+    if(RayMarch(worldPos,vec3(1,0,0),hitPos))
     {
       vec2 uv1=GetScreenCoordinate(hitPos);
       indir += brdf0*EvalDiffuse(-wi,wo,uv1)
