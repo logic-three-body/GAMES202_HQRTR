@@ -198,13 +198,72 @@ bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
     vec2 pos_screen = GetScreenCoordinate(pos);
     float uv_depth = GetGBufferDepth(pos_screen);
     float depth = GetDepth(pos);
-    if(uv_depth - depth < 1e-4)//equal
+    float dist = uv_depth - depth;
+    if(abs(dist) < 1e-4)//equal
     {
       return true;
     }
   }
-
   return false;
+}
+
+// distance functions
+vec3 opRep( vec3 p, float interval ) {
+
+	vec2 q = mod( p.xz, interval ) - interval * 0.5;
+	return vec3( q.x, p.y, q.y );
+
+}
+
+float sphereDist( vec3 p, float r ) {
+
+	return length( opRep( p, 3.0 ) ) - r;
+
+}
+
+float floorDist( vec3 p ){
+
+	return dot(p, vec3( 0.0, 1.0, 0.0 ) ) + 1.0;
+
+}
+
+float sceneDist( vec3 p ) {
+
+	return min(
+		sphereDist( p, 1.0 ),
+		floorDist( p )
+	);
+
+}
+
+bool raymarch2( vec3 origin, vec3 ray,out vec3 pos) {
+  const float EPS = 1e-4;
+	// marching loop
+	float dist;
+	float depth = 0.0;
+	pos = origin;
+  bool hit = false;
+  const int total =64;
+	for ( int i = 0; i < total; i++ ){
+		dist = sceneDist( pos );
+		depth += dist;
+		pos = origin + depth * ray;
+		if ( abs(dist) < EPS ) break;
+	}
+
+	// hit check 
+	if ( abs(dist) < EPS ) {
+
+		hit = true;
+
+	} else {
+
+		hit = false;
+
+	}
+
+	return hit;
+
 }
 
 vec3 dirToWorld(vec3 normal,vec3 localDir)
@@ -230,28 +289,27 @@ void main() {
   float scale = 5.0;
   L+=dirL*EvalDiffuse(wi,wo,uv0)*scale;
   //L = dirL/scale;
-  //check diffuse
-  // for(int i=0;i<SAMPLE_NUM;++i)
-  // {
-  //   float pdf;
-  //   //vec3 dir = SampleHemisphereCos(s,pdf);
-  //   vec3 dir = SampleHemisphereUniform(s,pdf);
-  //   vec3 wi = normalize(dir);
-  //   vec3 wo = normalize(uCameraPos - worldPos);
-  //   vec3 brdf0 = EvalDiffuse(wi,wo,uv0);
-  //   vec3 hitPos = vec3(0.0);
-  //   bool isHit = RayMarch1(worldPos,wi,hitPos);
-  //   if(isHit)
-  //   {
-  //     vec2 uv1 = GetScreenCoordinate(hitPos);
-  //     //vec3 inDirL = brdf0 * EvalDiffuse(-wi,wo,uv1) * EvalDirectionalLight(uv1) /pdf;
-  //     vec3 inDirL = brdf0 * EvalDiffuse(-wi,wo,uv1);
-  //     inDirL_col += inDirL;
-  //   }
-  // }
-  // inDirL_col /= float(SAMPLE_NUM);
-  // L+=inDirL_col;
-  //L+=inDirL_col;
+  vec3 normal = GetGBufferNormalWorld(uv0);
+
+  //raymarch:
+  vec3 indir=vec3(0.0);
+  for(int i=0;i<SAMPLE_NUM;++i)
+  {
+    float pdf=0.0;
+    vec3 dir=SampleHemisphereUniform(s,pdf);
+    //vec3 dir=SampleHemisphereCos(s,pdf);
+    dir = dirToWorld(normal,dir);
+    vec3 L0 = EvalDiffuse(wi,wo,uv0)/pdf;
+    vec3 hitPos=vec3(0.0);
+    if(raymarch2(worldPos,-dir,hitPos))
+    {
+      indir += L0*EvalDiffuse(dir,vec3(0.0),GetScreenCoordinate(hitPos))
+                 *EvalDirectionalLight(GetScreenCoordinate(hitPos));    
+    }
+  }
+  indir/=float(SAMPLE_NUM);
+  
+  L=indir*100.0;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
