@@ -243,7 +243,7 @@ bool raymarch2( vec3 origin, vec3 ray,out vec3 pos) {
 	float depth = 0.0;
 	pos = origin;
   bool hit = false;
-  const int total =64;
+  const int total =100;
 	for ( int i = 0; i < total; i++ ){
 		dist = sceneDist( pos );
 		depth += dist;
@@ -309,7 +309,7 @@ void main() {
   }
   indir/=float(SAMPLE_NUM);
   
-  L=indir*100.0;
+  L=indir*50.0;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
