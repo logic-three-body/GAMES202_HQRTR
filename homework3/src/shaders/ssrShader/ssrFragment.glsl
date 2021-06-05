@@ -220,15 +220,16 @@ vec3 dirToWorld(vec3 normal,vec3 localDir)
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
-  vec3 L = vec3(0.001);
+  vec3 L = vec3(0.0);
   vec3 worldPos = vPosWorld.xyz;
   vec2 uv0 = GetScreenCoordinate(worldPos);
   vec3 dirL = EvalDirectionalLight(uv0);
-  //L = GetGBufferDiffuse(GetScreenCoordinate(vPosWorld.xyz));
+  //L = GetGBufferDiffuse(uv0);
   vec3 wi = normalize(uLightDir);
   vec3 wo = normalize(uCameraPos - worldPos);
-  L+=dirL*EvalDiffuse(wi,wo,uv0);
-
+  float scale = 5.0;
+  L+=dirL*EvalDiffuse(wi,wo,uv0)*scale;
+  //L = dirL/scale;
   //check diffuse
   // for(int i=0;i<SAMPLE_NUM;++i)
   // {
