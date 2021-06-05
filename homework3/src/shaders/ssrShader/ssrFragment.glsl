@@ -223,18 +223,13 @@ void main() {
   vec3 L = vec3(0.001);
   vec3 worldPos = vPosWorld.xyz;
   vec2 uv0 = GetScreenCoordinate(worldPos);
-  vec3 dirL = EvalDirectionalLight(uv0)/10.0;
+  vec3 dirL = EvalDirectionalLight(uv0);
   //L = GetGBufferDiffuse(GetScreenCoordinate(vPosWorld.xyz));
-  L+=dirL;
+  vec3 wi = normalize(uLightDir);
+  vec3 wo = normalize(uCameraPos - worldPos);
+  L+=dirL*EvalDiffuse(wi,wo,uv0);
 
   //check diffuse
-  float pdf;
-  vec3 dir = SampleHemisphereUniform(s,pdf);
-  vec3 wi = normalize(dir);
-  vec3 wo = normalize(uCameraPos - worldPos);
-  vec3 brdf0 = EvalDiffuse(wi,wo,uv0);
-  vec3 inDirL_col = vec3(0.0);
-  inDirL_col = brdf0*10.0;
   // for(int i=0;i<SAMPLE_NUM;++i)
   // {
   //   float pdf;
