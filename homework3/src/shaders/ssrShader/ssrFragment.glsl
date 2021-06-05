@@ -19,7 +19,7 @@ varying highp vec4 vPosWorld;
 #define INV_PI 0.31830988618
 #define INV_TWO_PI 0.15915494309
 
-const int total_step = 200;
+const int total_step = 300;
 const float EPS = 1e-4;
 float Rand1(inout float p) {
   p = fract(p * .1031);
@@ -222,7 +222,7 @@ bool RayMarch3(vec3 ori, vec3 dir, out vec3 hitPos) {
     {
       return false;
     }
-    else if(GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint))<1e-4)
+    else if(GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint))<EPS)
     {
       hitPos = testPoint;
       return true;
@@ -231,9 +231,12 @@ bool RayMarch3(vec3 ori, vec3 dir, out vec3 hitPos) {
     {
       endPoint=testPoint;
       ++step;
+      ++step;
+      ++step;
     }
     else if(GetDepth(testPoint)>GetGBufferDepth(GetScreenCoordinate(testPoint)))
     {
+      --step;
       --step;
     }
   }
@@ -331,20 +334,22 @@ void main() {
     dir = dirToWorld(normal,dir);
     vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
     vec3 hitPos=vec3(0.0);
-    //vec3 direct = normalize(vec3(1,0,0));
-    if(RayMarch2(worldPos,-dir,hitPos))
+    vec3 direct = normalize(vec3(1,0,0));
+    direct = normalize(dir);
+    if(RayMarch3(worldPos,-direct,hitPos))
     {
       vec2 uv1=GetScreenCoordinate(hitPos);
-     vec3 res = brdf0*EvalDiffuse(-wi,wo,uv1)
+     vec3 res = brdf0*EvalDiffuse(-wi,direct,uv1)
                  *EvalDirectionalLight(uv1); 
-      if((res.x+res.y+res.z)>0.0) indir += res;//avoid neg
+      if((res.x+res.y+res.z)>0.0) 
+        indir += res;//avoid neg
       // indir += brdf0*EvalDiffuse(-wi,wo,uv1)
       //            *EvalDirectionalLight(uv1);    
     }
   }
   indir/=float(SAMPLE_NUM);
   L= indir*10.0;
-  //L+=indir;
+  //L+=indir*scale;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
