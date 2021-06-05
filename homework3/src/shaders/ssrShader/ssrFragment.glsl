@@ -217,7 +217,7 @@ vec3 opRep( vec3 p, float interval ) {
 
 float sphereDist( vec3 p, float r ) {
 
-	return length( opRep( p, 3.0 ) ) - r;
+	return length( opRep( p, 1.0 ) ) - r;
 
 }
 
@@ -230,8 +230,8 @@ float floorDist( vec3 p ){
 float sceneDist( vec3 p ) {
 
 	return min(
-		sphereDist( p, 2.0 ),
-		floorDist( p )
+		sphereDist( p, 1.0 ),
+		floorDist( p )//取整
 	);
 
 }
