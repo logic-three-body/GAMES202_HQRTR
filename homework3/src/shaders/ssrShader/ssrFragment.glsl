@@ -200,7 +200,7 @@ vec3 dirToWorld(vec3 normal,vec3 localDir)
   return tbn*localDir;
 }
 
-#define SAMPLE_NUM 1
+#define SAMPLE_NUM 100
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
