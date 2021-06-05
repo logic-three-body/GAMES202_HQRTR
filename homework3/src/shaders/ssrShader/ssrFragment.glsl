@@ -230,7 +230,7 @@ float floorDist( vec3 p ){
 float sceneDist( vec3 p ) {
 
 	return min(
-		sphereDist( p, 1.0 ),
+		sphereDist( p, 2.0 ),
 		floorDist( p )
 	);
 
