@@ -217,7 +217,7 @@ vec3 opRep( vec3 p, float interval ) {
 
 float sphereDist( vec3 p, float r ) {
 
-	return length( opRep( p, 1.0 ) ) - r;
+	return length( opRep( p, 10.0 ) ) - r;
 
 }
 
@@ -290,7 +290,6 @@ void main() {
   L+=dirL*EvalDiffuse(wi,wo,uv0)*scale;
   //L = dirL/scale;
   vec3 normal = GetGBufferNormalWorld(uv0);
-
   //raymarch:
   vec3 indir=vec3(0.0);
   for(int i=0;i<SAMPLE_NUM;++i)
@@ -299,17 +298,18 @@ void main() {
     vec3 dir=SampleHemisphereUniform(s,pdf);
     //vec3 dir=SampleHemisphereCos(s,pdf);
     dir = dirToWorld(normal,dir);
-    vec3 L0 = EvalDiffuse(wi,wo,uv0)/pdf;
+    vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
     vec3 hitPos=vec3(0.0);
-    if(raymarch2(worldPos,-dir,hitPos))
+    if(RayMarch(worldPos,wi,hitPos))
     {
-      indir += L0*EvalDiffuse(dir,vec3(0.0),GetScreenCoordinate(hitPos))
-                 *EvalDirectionalLight(GetScreenCoordinate(hitPos));    
+      vec2 uv1=GetScreenCoordinate(hitPos);
+      indir += brdf0*EvalDiffuse(-wi,wo,uv1)
+                 *EvalDirectionalLight(uv1);    
     }
   }
   indir/=float(SAMPLE_NUM);
-  
-  L=indir*50.0;
+  L= indir*10.0;
+  //L+=indir;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
