@@ -19,6 +19,8 @@ varying highp vec4 vPosWorld;
 #define INV_PI 0.31830988618
 #define INV_TWO_PI 0.15915494309
 
+const int total_step = 200;
+const float EPS = 1e-4;
 float Rand1(inout float p) {
   p = fract(p * .1031);
   p *= p + 33.33;
@@ -168,7 +170,7 @@ bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
   for(int i=0;i<5;++i)
   {
     vec3 testPoint = endPoint + float(step)*dir;
-    if(step>100)
+    if(step>total_step)
     {
       return false;
     }
@@ -180,6 +182,7 @@ bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
     else if(GetDepth(testPoint)<GetGBufferDepth(GetScreenCoordinate(testPoint)))
     {
       step*=2;
+      endPoint=testPoint;
     }
     else if(GetDepth(testPoint)>GetGBufferDepth(GetScreenCoordinate(testPoint)))
     {
@@ -190,7 +193,50 @@ bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
 }
 
 bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
+  vec2 ori_uv = GetScreenCoordinate(ori);
+  vec2 dir_uv = GetScreenCoordinate(dir);
+  float step_size = 2.0/float(total_step)/length(dir_uv);
+  
+  const int first_step=10;
+  for(int i = first_step;i<total_step;++i)
+  { 
+    vec3 pos = ori+dir*step_size*float(i);
+    vec2 pos_uv = GetScreenCoordinate(pos);
+    if(GetGBufferDepth(pos_uv)-GetDepth(pos)<EPS)
+    {
+      hitPos = pos;
+      return true;
+    }
+  }
+  hitPos = vec3(normalize(dir_uv),0.0);
+  return false;
+}
 
+bool RayMarch3(vec3 ori, vec3 dir, out vec3 hitPos) {
+  int step=1;
+  vec3 endPoint = ori;
+  for(int i=0;i<total_step;++i)
+  {
+    vec3 testPoint = endPoint + float(step)*dir;
+    if(step>total_step)
+    {
+      return false;
+    }
+    else if(GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint))<1e-4)
+    {
+      hitPos = testPoint;
+      return true;
+    }
+    else if(GetDepth(testPoint)<GetGBufferDepth(GetScreenCoordinate(testPoint)))
+    {
+      endPoint=testPoint;
+      ++step;
+    }
+    else if(GetDepth(testPoint)>GetGBufferDepth(GetScreenCoordinate(testPoint)))
+    {
+      --step;
+    }
+  }
   return false;
 }
 
@@ -204,7 +250,7 @@ vec3 opRep( vec3 p, float interval ) {
 
 float sphereDist( vec3 p, float r ) {
 
-	return length( opRep( p, 3.0 ) ) - r;
+	return length( opRep( p, 0.5 ) ) - r;
 
 }
 
@@ -217,21 +263,19 @@ float floorDist( vec3 p ){
 float sceneDist( vec3 p ) {
 
 	return min(
-		sphereDist( p, 1.0 ),
+		sphereDist( p, 0.5),
 		floorDist( p )//取整
 	);
 
 }
 
 bool RayMarch2( vec3 origin, vec3 ray,out vec3 pos) {
-  const float EPS = 1e-2;
 	// marching loop
 	float dist;
 	float depth = 0.0;
 	pos = origin;
   bool hit = false;
-  const int total =64;
-	for ( int i = 0; i < total; i++ ){
+	for ( int i = 0; i < total_step; i++ ){
 		dist = sceneDist(pos);
 		depth += dist;
 		pos = origin + depth * ray;
@@ -287,9 +331,8 @@ void main() {
     dir = dirToWorld(normal,dir);
     vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
     vec3 hitPos=vec3(0.0);
-    vec3 direct = normalize(vec3(1,0,0));
-    if(RayMarch(worldPos,direct,hitPos))
-    //if(RayMarch2(uCameraPos,-wi,hitPos))
+    //vec3 direct = normalize(vec3(1,0,0));
+    if(RayMarch2(worldPos,-dir,hitPos))
     {
       vec2 uv1=GetScreenCoordinate(hitPos);
      vec3 res = brdf0*EvalDiffuse(-wi,wo,uv1)
@@ -300,8 +343,8 @@ void main() {
     }
   }
   indir/=float(SAMPLE_NUM);
-  //L= indir*10.0;
-  L+=indir;
+  L= indir*10.0;
+  //L+=indir;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
