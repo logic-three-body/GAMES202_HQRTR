@@ -233,6 +233,7 @@ bool RayMarch3(vec3 ori, vec3 dir, out vec3 hitPos) {
       ++step;
       ++step;
       ++step;
+      
     }
     else if(GetDepth(testPoint)>GetGBufferDepth(GetScreenCoordinate(testPoint)))
     {
@@ -309,7 +310,7 @@ vec3 dirToWorld(vec3 normal,vec3 localDir)
   return tbn*localDir;
 }
 
-#define SAMPLE_NUM 10
+#define SAMPLE_NUM 5
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
@@ -334,12 +335,12 @@ void main() {
     dir = dirToWorld(normal,dir);
     vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
     vec3 hitPos=vec3(0.0);
-    vec3 direct = normalize(vec3(1,0,0));
+    vec3 direct = normalize(vec3(1.0,0.0,0.0));
     direct = normalize(dir);
-    if(RayMarch3(worldPos,-direct,hitPos))
+    if(RayMarch3(worldPos,direct,hitPos))
     {
       vec2 uv1=GetScreenCoordinate(hitPos);
-     vec3 res = brdf0*EvalDiffuse(-wi,direct,uv1)
+      vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
                  *EvalDirectionalLight(uv1); 
       if((res.x+res.y+res.z)>0.0) 
         indir += res;//avoid neg
@@ -348,8 +349,8 @@ void main() {
     }
   }
   indir/=float(SAMPLE_NUM);
-  L= indir*10.0;
-  //L+=indir*scale;
+  //L= indir*10.0;
+  L+=indir*scale;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
