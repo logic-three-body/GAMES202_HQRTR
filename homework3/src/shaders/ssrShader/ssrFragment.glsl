@@ -217,7 +217,7 @@ vec3 opRep( vec3 p, float interval ) {
 
 float sphereDist( vec3 p, float r ) {
 
-	return length( opRep( p, 10.0 ) ) - r;
+	return length( opRep( p, 3.0 ) ) - r;
 
 }
 
@@ -236,7 +236,7 @@ float sceneDist( vec3 p ) {
 
 }
 
-bool raymarch2( vec3 origin, vec3 ray,out vec3 pos) {
+bool RayMarch2( vec3 origin, vec3 ray,out vec3 pos) {
   const float EPS = 1e-4;
 	// marching loop
 	float dist;
@@ -245,7 +245,7 @@ bool raymarch2( vec3 origin, vec3 ray,out vec3 pos) {
   bool hit = false;
   const int total =100;
 	for ( int i = 0; i < total; i++ ){
-		dist = sceneDist( pos );
+		dist = GetDepth(pos);
 		depth += dist;
 		pos = origin + depth * ray;
 		if ( abs(dist) < EPS ) break;
@@ -300,7 +300,7 @@ void main() {
     dir = dirToWorld(normal,dir);
     vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
     vec3 hitPos=vec3(0.0);
-    if(RayMarch(worldPos,wi,hitPos))
+    if(RayMarch2(worldPos,-wi,hitPos))
     {
       vec2 uv1=GetScreenCoordinate(hitPos);
       indir += brdf0*EvalDiffuse(-wi,wo,uv1)
