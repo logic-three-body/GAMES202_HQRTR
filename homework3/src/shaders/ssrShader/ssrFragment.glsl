@@ -301,17 +301,20 @@ void main() {
     dir = dirToWorld(normal,dir);
     vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
     vec3 hitPos=vec3(0.0);
-    //if(RayMarch(worldPos,vec3(1,0,0),hitPos))
-    if(RayMarch2(uCameraPos,-wi,hitPos))
+    if(RayMarch(worldPos,vec3(1,0,0),hitPos))
+    //if(RayMarch2(uCameraPos,-wi,hitPos))
     {
       vec2 uv1=GetScreenCoordinate(hitPos);
-      indir += brdf0*EvalDiffuse(-wi,wo,uv1)
-                 *EvalDirectionalLight(uv1);    
+     vec3 res = brdf0*EvalDiffuse(-wi,wo,uv1)
+                 *EvalDirectionalLight(uv1); 
+      if((res.x+res.y+res.z)>0.0) indir += res;//avoid neg
+      // indir += brdf0*EvalDiffuse(-wi,wo,uv1)
+      //            *EvalDirectionalLight(uv1);    
     }
   }
   indir/=float(SAMPLE_NUM);
-  L= indir*10.0;
-  //L+=indir;
+  //L= indir*10.0;
+  L+=indir;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
