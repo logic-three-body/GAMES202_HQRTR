@@ -238,15 +238,15 @@ float sceneDist( vec3 p ) {
 }
 
 bool RayMarch2( vec3 origin, vec3 ray,out vec3 pos) {
-  const float EPS = 1e-4;
+  const float EPS = 1e-2;
 	// marching loop
 	float dist;
 	float depth = 0.0;
 	pos = origin;
   bool hit = false;
-  const int total =100;
+  const int total =64;
 	for ( int i = 0; i < total; i++ ){
-		dist = GetDepth(pos);
+		dist = sceneDist(pos);
 		depth += dist;
 		pos = origin + depth * ray;
 		if ( abs(dist) < EPS ) break;
@@ -301,7 +301,8 @@ void main() {
     dir = dirToWorld(normal,dir);
     vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
     vec3 hitPos=vec3(0.0);
-    if(RayMarch(worldPos,vec3(1,0,0),hitPos))
+    //if(RayMarch(worldPos,vec3(1,0,0),hitPos))
+    if(RayMarch2(uCameraPos,-wi,hitPos))
     {
       vec2 uv1=GetScreenCoordinate(hitPos);
       indir += brdf0*EvalDiffuse(-wi,wo,uv1)
