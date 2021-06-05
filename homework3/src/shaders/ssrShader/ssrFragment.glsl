@@ -190,21 +190,7 @@ bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
 }
 
 bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
-  vec3 pos =ori;
-  const int total = 100;
-  for(int i = 0;i < total;++i)
-  {
-    pos+=dir;
-    vec2 pos_screen = GetScreenCoordinate(pos);
-    float uv_depth = GetGBufferDepth(pos_screen);
-    float depth = GetDepth(pos);
-    float dist = uv_depth - depth;
-    if(abs(dist) < 1e-4)//equal
-    {
-      hitPos=pos;
-      return true;
-    }
-  }
+
   return false;
 }
 
@@ -301,7 +287,8 @@ void main() {
     dir = dirToWorld(normal,dir);
     vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
     vec3 hitPos=vec3(0.0);
-    if(RayMarch(worldPos,vec3(1,0,0),hitPos))
+    vec3 direct = normalize(vec3(1,0,0));
+    if(RayMarch(worldPos,direct,hitPos))
     //if(RayMarch2(uCameraPos,-wi,hitPos))
     {
       vec2 uv1=GetScreenCoordinate(hitPos);
