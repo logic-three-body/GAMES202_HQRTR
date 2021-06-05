@@ -127,16 +127,9 @@ wo:camera_pos-shading_point
  */
 vec3 EvalDiffuse(vec3 wi, vec3 wo, vec2 uv) {
   vec3 normal = normalize(GetGBufferNormalWorld(uv));
-  const float value =0.65;
-  vec3 L = vec3(0.0);
-  if(dot(normal,wi)>0.0)
-  {
-    L = vec3(value)/M_PI;
-  }
-  else
-  {
-    L = vec3(0.0);
-  }
+  vec3 diff = GetGBufferDiffuse(uv);
+  float cosTheta = dot(normalize(wi),normal);
+  vec3 L = diff * INV_PI * cosTheta;
   return L;
 }
 
@@ -147,20 +140,25 @@ vec3 EvalDiffuse(vec3 wi, vec3 wo, vec2 uv) {
  */
 vec3 EvalDirectionalLight(vec2 uv) {
   vec3 Le = vec3(0.0);
-  vec3 Posworld = GetGBufferPosWorld(uv);
-  float shadow_coef = GetGBufferuShadow(uv);
-  vec3 diff_col = GetGBufferDiffuse(uv);
-  if(shadow_coef>0.0)
-  {
-    vec3 normal = normalize(GetGBufferNormalWorld(uv));
-    vec3 lightDir = normalize(uLightDir);
-    float diff = max(dot(lightDir,normal),0.0);
-    Le= diff_col*diff;
-  }
-  else
-  {
-    Le=vec3(0.0);
-  }
+  // vec3 Posworld = GetGBufferPosWorld(uv);
+  // float shadow_coef = GetGBufferuShadow(uv);
+  // vec3 diff_col = GetGBufferDiffuse(uv);
+  // if(shadow_coef>0.0)
+  // {
+  //   vec3 normal = normalize(GetGBufferNormalWorld(uv));
+  //   vec3 lightDir = normalize(uLightDir);
+  //   float diff = max(dot(lightDir,normal),0.0);
+  //   Le= diff_col*diff;
+  // }
+  // else
+  // {
+  //   Le=vec3(0.0);
+  // }
+  vec3 lightDirWS = normalize(uLightDir);
+  vec3 normalWS = normalize(GetGBufferNormalWorld(uv));
+  float ndotl = max(0.0,dot(lightDirWS,normalWS));
+  float visibility = GetGBufferuShadow(uv);
+  Le = uLightRadiance * visibility * ndotl;
   return Le;
 }
 
@@ -191,6 +189,24 @@ bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
   return false;
 }
 
+bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
+  vec3 pos =ori;
+  const int total = 100;
+  for(int i = 0;i < total;++i)
+  {
+    pos+=dir;
+    vec2 pos_screen = GetScreenCoordinate(pos);
+    float uv_depth = GetGBufferDepth(pos_screen);
+    float depth = GetDepth(pos);
+    if(uv_depth - depth < 1e-4)//equal
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 vec3 dirToWorld(vec3 normal,vec3 localDir)
 {
   vec3 b1=vec3(0.0);
@@ -200,37 +216,46 @@ vec3 dirToWorld(vec3 normal,vec3 localDir)
   return tbn*localDir;
 }
 
-#define SAMPLE_NUM 100
+#define SAMPLE_NUM 10
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
   vec3 L = vec3(0.001);
   vec3 worldPos = vPosWorld.xyz;
   vec2 uv0 = GetScreenCoordinate(worldPos);
-  vec3 dirL = EvalDirectionalLight(uv0);
+  vec3 dirL = EvalDirectionalLight(uv0)/10.0;
   //L = GetGBufferDiffuse(GetScreenCoordinate(vPosWorld.xyz));
   L+=dirL;
-  vec3 normal = GetGBufferNormalWorld(uv0);
+
+  //check diffuse
+  float pdf;
+  vec3 dir = SampleHemisphereUniform(s,pdf);
+  vec3 wi = normalize(dir);
+  vec3 wo = normalize(uCameraPos - worldPos);
+  vec3 brdf0 = EvalDiffuse(wi,wo,uv0);
   vec3 inDirL_col = vec3(0.0);
-  for(int i=0;i<SAMPLE_NUM;++i)
-  {
-    float pdf;
-    //vec3 dir = SampleHemisphereCos(s,pdf);
-    vec3 dir = SampleHemisphereUniform(s,pdf);
-    vec3 wi = normalize(dir);
-    vec3 wo = normalize(uCameraPos - worldPos);
-    vec3 brdf0 = EvalDiffuse(wi,wo,uv0);
-    vec3 hitPos = vec3(0.0);
-    bool isHit = RayMarch(worldPos,wi,hitPos);
-    if(isHit)
-    {
-      vec2 uv1 = GetScreenCoordinate(hitPos);
-      vec3 inDirL = brdf0 * EvalDiffuse(-wi,wo,uv1) * EvalDirectionalLight(uv1) /pdf;
-      inDirL_col += inDirL;
-    }
-  }
-  inDirL_col /= float(SAMPLE_NUM);
-  L+=inDirL_col;
+  inDirL_col = brdf0*10.0;
+  // for(int i=0;i<SAMPLE_NUM;++i)
+  // {
+  //   float pdf;
+  //   //vec3 dir = SampleHemisphereCos(s,pdf);
+  //   vec3 dir = SampleHemisphereUniform(s,pdf);
+  //   vec3 wi = normalize(dir);
+  //   vec3 wo = normalize(uCameraPos - worldPos);
+  //   vec3 brdf0 = EvalDiffuse(wi,wo,uv0);
+  //   vec3 hitPos = vec3(0.0);
+  //   bool isHit = RayMarch1(worldPos,wi,hitPos);
+  //   if(isHit)
+  //   {
+  //     vec2 uv1 = GetScreenCoordinate(hitPos);
+  //     //vec3 inDirL = brdf0 * EvalDiffuse(-wi,wo,uv1) * EvalDirectionalLight(uv1) /pdf;
+  //     vec3 inDirL = brdf0 * EvalDiffuse(-wi,wo,uv1);
+  //     inDirL_col += inDirL;
+  //   }
+  // }
+  // inDirL_col /= float(SAMPLE_NUM);
+  // L+=inDirL_col;
+  //L+=inDirL_col;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
