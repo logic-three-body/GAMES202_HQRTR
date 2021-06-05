@@ -165,27 +165,30 @@ vec3 EvalDirectionalLight(vec2 uv) {
 }
 
 bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
+  float firstStep=0.1;
   int step=1;
   vec3 endPoint = ori;
-  for(int i=0;i<5;++i)
+  const int total = 200;
+  for(int i=0;i<total;++i)
   {
-    vec3 testPoint = endPoint + float(step)*dir;
+    vec3 testPoint = endPoint + float(step)*dir*firstStep;
     if(step>100)
     {
       return false;
     }
-    else if(GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint))<1e-4)
+    else if(abs(GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint)))<1e-4)//equal condition
     {
       hitPos = testPoint;
       return true;
     }
     else if(GetDepth(testPoint)<GetGBufferDepth(GetScreenCoordinate(testPoint)))
     {
-      step*=2;
+      ++step;
+      endPoint = testPoint;
     }
     else if(GetDepth(testPoint)>GetGBufferDepth(GetScreenCoordinate(testPoint)))
     {
-      step/=2;
+      --step;
     }
   }
   return false;
@@ -200,7 +203,7 @@ vec3 dirToWorld(vec3 normal,vec3 localDir)
   return tbn*localDir;
 }
 
-#define SAMPLE_NUM 1
+#define SAMPLE_NUM 10
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
@@ -208,7 +211,7 @@ void main() {
   vec3 worldPos = vPosWorld.xyz;
   vec2 uv0 = GetScreenCoordinate(worldPos);
   vec3 dirL = EvalDirectionalLight(uv0);
- // L += GetGBufferDiffuse(GetScreenCoordinate(vPosWorld.xyz));
+  //L += GetGBufferDiffuse(GetScreenCoordinate(vPosWorld.xyz));
   L+=dirL;
   vec3 normal = GetGBufferNormalWorld(uv0);
   vec3 inDirL_col = vec3(0.0);
