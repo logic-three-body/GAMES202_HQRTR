@@ -79,3 +79,27 @@ bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
 ```
 
 ![镜面反射handin](https://i.loli.net/2021/06/06/3bDSpK4ZitxrJwe.gif)
+
+间接光着色（spp=1）
+
+```glsl
+  //indir shading:
+  for(int i=0;i<SAMPLE_NUM;++i)
+  {
+    float pdf=0.0;
+    vec3 dir=SampleHemisphereUniform(s,pdf);
+    //vec3 dir=SampleHemisphereCos(s,pdf);
+    dir = dirToWorld(normal,dir);
+    vec3 hitPos=vec3(0.0);
+    vec3 direct = normalize(vec3(1.0,0.0,0.0));
+    direct = normalize(dir);
+    if(RayMarch(worldPos,direct,hitPos))
+    {
+      vec2 uv1=GetScreenCoordinate(hitPos);
+      if(length(res)>0.0) 
+        indir += res;//avoid neg   
+    }
+  }
+```
+
+![间接光](https://i.loli.net/2021/06/06/tEuHrnKIZAs74iN.gif)

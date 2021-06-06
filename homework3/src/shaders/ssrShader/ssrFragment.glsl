@@ -202,38 +202,38 @@ void main() {
   vec3 indir=vec3(0.0);
 
   //test mirro:
-  vec3 test_dir = vec3(0.0);
-  test_dir=reflect(-wo,normal);
-  vec3 test_hit;
-  if(RayMarch(worldPos,test_dir,test_hit))
-  {
-    indir = GetGBufferDiffuse(GetScreenCoordinate(test_hit));    
-  }
-
-
-  //shading:
-  // for(int i=0;i<SAMPLE_NUM;++i)
+  // vec3 test_dir = vec3(0.0);
+  // test_dir=reflect(-wo,normal);
+  // vec3 test_hit;
+  // if(RayMarch(worldPos,test_dir,test_hit))
   // {
-  //   float pdf=0.0;
-  //   vec3 dir=SampleHemisphereUniform(s,pdf);
-  //   //vec3 dir=SampleHemisphereCos(s,pdf);
-  //   dir = dirToWorld(normal,dir);
-  //   vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
-  //   vec3 hitPos=vec3(0.0);
-  //   vec3 direct = normalize(vec3(1.0,0.0,0.0));
-  //   direct = normalize(dir);
-  //   //if(RayMarch(worldPos,direct,hitPos))
-  //   {
-  //     vec2 uv1=GetScreenCoordinate(hitPos);
-  //     // vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
-  //     //            *EvalDirectionalLight(uv1);      
-  //     //vec3 res = EvalDiffuse(-direct,vec3(0.0),uv1);
-  //     if(length(res)>0.0) 
-  //       indir += res;//avoid neg   
-  //   }
+  //   indir = GetGBufferDiffuse(GetScreenCoordinate(test_hit));    
   // }
+
+
+  //indir shading:
+  for(int i=0;i<SAMPLE_NUM;++i)
+  {
+    float pdf=0.0;
+    vec3 dir=SampleHemisphereUniform(s,pdf);
+    //vec3 dir=SampleHemisphereCos(s,pdf);
+    dir = dirToWorld(normal,dir);
+    vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
+    vec3 hitPos=vec3(0.0);
+    vec3 direct = normalize(vec3(1.0,0.0,0.0));
+    direct = normalize(dir);
+    if(RayMarch(worldPos,direct,hitPos))
+    {
+      vec2 uv1=GetScreenCoordinate(hitPos);
+      // vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
+      //            *EvalDirectionalLight(uv1);      
+      vec3 res = EvalDiffuse(-direct,vec3(0.0),uv1);
+      if(length(res)>0.0) 
+        indir += res;//avoid neg   
+    }
+  }
   indir/=float(SAMPLE_NUM);
-  L= indir;
+  L= indir*10.0;
   //L+=indir*scale;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
