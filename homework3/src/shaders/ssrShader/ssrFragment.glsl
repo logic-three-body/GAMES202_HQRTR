@@ -153,33 +153,6 @@ vec3 EvalDirectionalLight(vec2 uv) {
 
 
 bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
-<<<<<<< HEAD
-  float firstStep=0.1;
-  int step=1;
-  vec3 endPoint = ori;
-  const int total = 200;
-  for(int i=0;i<total;++i)
-  {
-    vec3 testPoint = endPoint + float(step)*dir*firstStep;
-    if(step>100)
-    {
-      return false;
-    }
-    else if(abs(GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint)))<1e-4)//equal condition
-    {
-      hitPos = testPoint;
-      return true;
-    }
-    else if(GetDepth(testPoint)<GetGBufferDepth(GetScreenCoordinate(testPoint)))
-    {
-      ++step;
-      endPoint = testPoint;
-    }
-    else if(GetDepth(testPoint)>GetGBufferDepth(GetScreenCoordinate(testPoint)))
-    {
-      --step;
-    }
-=======
   vec2 ori_uv = GetScreenCoordinate(ori);
   vec2 dir_uv = GetScreenCoordinate(dir);
   float step_size = 2.0/float(total_step)/length(dir_uv);
@@ -194,7 +167,6 @@ bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
       hitPos = pos;
       return true;
     }
->>>>>>> assignment3-evaldifuss
   }
  // hitPos = vec3(normalize(dir_uv),0.0);
   return false;
@@ -211,11 +183,7 @@ vec3 dirToWorld(vec3 normal,vec3 localDir)
   return tbn*localDir;
 }
 
-<<<<<<< HEAD
-#define SAMPLE_NUM 10
-=======
-#define SAMPLE_NUM 100
->>>>>>> assignment3-evaldifuss
+#define SAMPLE_NUM 1
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
@@ -223,17 +191,12 @@ void main() {
   vec3 worldPos = vPosWorld.xyz;
   vec2 uv0 = GetScreenCoordinate(worldPos);
   vec3 dirL = EvalDirectionalLight(uv0);
-<<<<<<< HEAD
-  //L += GetGBufferDiffuse(GetScreenCoordinate(vPosWorld.xyz));
-  L+=dirL;
-=======
   //L = GetGBufferDiffuse(uv0);
   vec3 wi = normalize(uLightDir);
   vec3 wo = normalize(uCameraPos - worldPos);
   float scale = 5.0;
   L+=dirL*EvalDiffuse(wi,wo,uv0);
   //L = dirL/scale;
->>>>>>> assignment3-evaldifuss
   vec3 normal = GetGBufferNormalWorld(uv0);
   //raymarch:
   vec3 indir=vec3(0.0);
@@ -251,18 +214,6 @@ void main() {
   //indir shading:
   for(int i=0;i<SAMPLE_NUM;++i)
   {
-<<<<<<< HEAD
-    float pdf;
-    //vec3 dir = SampleHemisphereCos(s,pdf);
-    vec3 dir = SampleHemisphereUniform(s,pdf);
-    vec3 wi = normalize(dir);
-    vec3 wo = normalize(uCameraPos - worldPos);
-    vec3 brdf0 = EvalDiffuse(wi,wo,uv0);
-    vec3 hitPos = vec3(0.0);
-    bool isHit = true;
-    isHit=RayMarch(worldPos,wi,hitPos);
-    if(isHit)
-=======
     float pdf=0.0;
     vec3 dir=SampleHemisphereUniform(s,pdf);
     //vec3 dir=SampleHemisphereCos(s,pdf);
@@ -272,7 +223,6 @@ void main() {
     vec3 direct = normalize(vec3(1.0,0.0,0.0));
     direct = normalize(dir);
     if(RayMarch(worldPos,direct,hitPos))
->>>>>>> assignment3-evaldifuss
     {
       vec2 uv1=GetScreenCoordinate(hitPos);
       vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
