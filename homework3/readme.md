@@ -129,6 +129,8 @@ bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
 
 #### 间接光spp=100
 
+【说明：为了显示明显，仅显示间接光时将间接光强度进行了增大】
+
 ![间接光cave](https://i.loli.net/2021/06/06/j2kNBTYmoV6M3fO.png)
 
 #### 直接光+间接光spp=100
