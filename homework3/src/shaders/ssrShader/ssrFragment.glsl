@@ -271,10 +271,10 @@ void main() {
   vec3 indir=vec3(0.0);
 
   //test mirro:
-  vec3 ori = vPosWorld.xyz/vPosWorld.w;
-  vec3 test_dir = normalize(normal*dot(normal,uCameraPos)*2.0-uCameraPos);
+  vec3 test_dir = vec3(0.0);
+  test_dir=reflect(-wo,normal);
   vec3 test_hit;
-  if(RayMarch1(ori,test_dir,test_hit))
+  if(RayMarch1(worldPos,test_dir,test_hit))
   {
     indir = GetGBufferDiffuse(GetScreenCoordinate(test_hit));    
   }
