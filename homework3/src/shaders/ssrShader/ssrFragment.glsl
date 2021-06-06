@@ -225,16 +225,16 @@ void main() {
     if(RayMarch(worldPos,direct,hitPos))
     {
       vec2 uv1=GetScreenCoordinate(hitPos);
-      // vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
-      //            *EvalDirectionalLight(uv1);      
-      vec3 res = EvalDiffuse(-direct,vec3(0.0),uv1);
+      vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
+                 *EvalDirectionalLight(uv1);      
+      //vec3 res = EvalDiffuse(-direct,vec3(0.0),uv1);
       if(length(res)>0.0) 
         indir += res;//avoid neg   
     }
   }
   indir/=float(SAMPLE_NUM);
-  L= indir*10.0;
-  //L+=indir*scale;
+  //L= indir*10.0;
+  L+=indir;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
