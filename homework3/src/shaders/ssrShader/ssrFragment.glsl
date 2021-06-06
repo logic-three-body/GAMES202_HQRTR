@@ -183,7 +183,7 @@ vec3 dirToWorld(vec3 normal,vec3 localDir)
   return tbn*localDir;
 }
 
-#define SAMPLE_NUM 1
+#define SAMPLE_NUM 100
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
@@ -195,7 +195,7 @@ void main() {
   vec3 wi = normalize(uLightDir);
   vec3 wo = normalize(uCameraPos - worldPos);
   float scale = 5.0;
-  L+=dirL*EvalDiffuse(wi,wo,uv0)*scale;
+  L+=dirL*EvalDiffuse(wi,wo,uv0);
   //L = dirL/scale;
   vec3 normal = GetGBufferNormalWorld(uv0);
   //raymarch:
