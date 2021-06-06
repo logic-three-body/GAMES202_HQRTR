@@ -197,18 +197,18 @@ bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
   vec2 dir_uv = GetScreenCoordinate(dir);
   float step_size = 2.0/float(total_step)/length(dir_uv);
   
-  const int first_step=1;
+  const int first_step=10;
   for(int i = first_step;i<total_step;++i)
   { 
     vec3 pos = ori+dir*step_size*float(i);
     vec2 pos_uv = GetScreenCoordinate(pos);
-    if(GetGBufferDepth(pos_uv)-GetDepth(pos)<EPS)
+    if(GetGBufferDepth(pos_uv)+EPS<GetDepth(pos))
     {
       hitPos = pos;
       return true;
     }
   }
-  hitPos = vec3(normalize(dir_uv),0.0);
+ // hitPos = vec3(normalize(dir_uv),0.0);
   return false;
 }
 
@@ -254,7 +254,7 @@ vec3 dirToWorld(vec3 normal,vec3 localDir)
   return tbn*localDir;
 }
 
-#define SAMPLE_NUM 1
+#define SAMPLE_NUM 10
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
@@ -284,8 +284,10 @@ void main() {
     if(RayMarch3(worldPos,direct,hitPos))
     {
       vec2 uv1=GetScreenCoordinate(hitPos);
-      vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
-                 *EvalDirectionalLight(uv1); 
+      // vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
+      //            *EvalDirectionalLight(uv1);      
+     vec3 res = EvalDiffuse(direct,vec3(0.0),uv1);
+
       if(length(res)>0.0) 
         indir += res;//avoid neg
       // indir += brdf0*EvalDiffuse(-wi,wo,uv1)
