@@ -19,7 +19,7 @@ varying highp vec4 vPosWorld;
 #define INV_PI 0.31830988618
 #define INV_TWO_PI 0.15915494309
 
-const int total_step = 300;
+const int total_step = 50;
 const float EPS = 1e-4;
 float Rand1(inout float p) {
   p = fract(p * .1031);
@@ -142,20 +142,6 @@ vec3 EvalDiffuse(vec3 wi, vec3 wo, vec2 uv) {
  */
 vec3 EvalDirectionalLight(vec2 uv) {
   vec3 Le = vec3(0.0);
-  // vec3 Posworld = GetGBufferPosWorld(uv);
-  // float shadow_coef = GetGBufferuShadow(uv);
-  // vec3 diff_col = GetGBufferDiffuse(uv);
-  // if(shadow_coef>0.0)
-  // {
-  //   vec3 normal = normalize(GetGBufferNormalWorld(uv));
-  //   vec3 lightDir = normalize(uLightDir);
-  //   float diff = max(dot(lightDir,normal),0.0);
-  //   Le= diff_col*diff;
-  // }
-  // else
-  // {
-  //   Le=vec3(0.0);
-  // }
   vec3 lightDirWS = normalize(uLightDir);
   vec3 normalWS = normalize(GetGBufferNormalWorld(uv));
   float ndotl = max(0.0,dot(lightDirWS,normalWS));
@@ -197,7 +183,7 @@ bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
   vec2 dir_uv = GetScreenCoordinate(dir);
   float step_size = 2.0/float(total_step)/length(dir_uv);
   
-  const int first_step=10;
+  const int first_step=1;
   for(int i = first_step;i<total_step;++i)
   { 
     vec3 pos = ori+dir*step_size*float(i);
@@ -213,16 +199,16 @@ bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
 }
 
 bool RayMarch3(vec3 ori, vec3 dir, out vec3 hitPos) {
-  int step=1;
+  float step=0.8;
   vec3 endPoint = ori;
   for(int i=0;i<total_step;++i)
   {
-    vec3 testPoint = endPoint + float(step)*dir;
-    if(step>total_step)
+    vec3 testPoint = endPoint + step*dir;
+    if(step>float(total_step))
     {
       return false;
     }
-    else if(GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint))<EPS)
+    else if((GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint)))<EPS)
     {
       hitPos = testPoint;
       return true;
@@ -230,15 +216,7 @@ bool RayMarch3(vec3 ori, vec3 dir, out vec3 hitPos) {
     else if(GetDepth(testPoint)<GetGBufferDepth(GetScreenCoordinate(testPoint)))
     {
       endPoint=testPoint;
-      ++step;
-      ++step;
-      ++step;
-      
-    }
-    else if(GetDepth(testPoint)>GetGBufferDepth(GetScreenCoordinate(testPoint)))
-    {
-      --step;
-      --step;
+      step+=0.1;  
     }
   }
   return false;
@@ -254,7 +232,7 @@ vec3 dirToWorld(vec3 normal,vec3 localDir)
   return tbn*localDir;
 }
 
-#define SAMPLE_NUM 10
+#define SAMPLE_NUM 1
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
