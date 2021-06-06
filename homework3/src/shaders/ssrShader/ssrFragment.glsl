@@ -19,7 +19,7 @@ varying highp vec4 vPosWorld;
 #define INV_PI 0.31830988618
 #define INV_TWO_PI 0.15915494309
 
-const int total_step = 100;
+const int total_step = 50;
 const float EPS = 1e-4;
 float Rand1(inout float p) {
   p = fract(p * .1031);
@@ -150,41 +150,15 @@ vec3 EvalDirectionalLight(vec2 uv) {
   return Le;
 }
 
-bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
-  int step=1;
-  vec3 endPoint = ori;
-  for(int i=0;i<5;++i)
-  {
-    vec3 testPoint = endPoint + float(step)*dir;
-    if(step>total_step)
-    {
-      return false;
-    }
-    else if(GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint))<1e-4)
-    {
-      hitPos = testPoint;
-      return true;
-    }
-    else if(GetDepth(testPoint)<GetGBufferDepth(GetScreenCoordinate(testPoint)))
-    {
-      step*=2;
-      endPoint=testPoint;
-    }
-    else if(GetDepth(testPoint)>GetGBufferDepth(GetScreenCoordinate(testPoint)))
-    {
-      step/=2;
-    }
-  }
-  return false;
-}
 
-bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
+
+bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
   vec2 ori_uv = GetScreenCoordinate(ori);
   vec2 dir_uv = GetScreenCoordinate(dir);
   float step_size = 2.0/float(total_step)/length(dir_uv);
   
   const int first_step=1;
-  for(int i = first_step;i<total_step;++i)
+  for(int i = first_step;i<=total_step;++i)
   { 
     vec3 pos = ori+dir*step_size*float(i);
     vec2 pos_uv = GetScreenCoordinate(pos);
@@ -198,49 +172,6 @@ bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
   return false;
 }
 
-bool RayMarch2(vec3 ori, vec3 dir, out vec3 hitPos)
-{
-  vec3 pos = ori;
-  for(int i=0;i<total_step;++i)
-  {
-    pos+=dir;
-    vec2 screenPos = GetScreenCoordinate(pos);
-    float uv_depth = GetGBufferDepth(screenPos);
-    float depth = GetDepth(pos);
-    if(uv_depth - depth < EPS)
-    {
-      hitPos = pos;
-      return true;
-    }
-  }
-  return false;
-}
-
-bool RayMarch3(vec3 ori, vec3 dir, out vec3 hitPos) {
-  float step = 1.0;
-  float per_step=0.1;
-  vec3 endPoint = ori;
-  for(int i=0;i<total_step;++i)
-  {
-    vec3 testPoint = endPoint + step*dir;
-    if((GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint)))<EPS)
-    {
-      hitPos = testPoint;
-      return true;
-    }
-    else if(GetDepth(testPoint)<GetGBufferDepth(GetScreenCoordinate(testPoint)))
-    {
-      endPoint=testPoint;
-      step+=per_step;  
-    }
-    else if(GetDepth(testPoint)>GetGBufferDepth(GetScreenCoordinate(testPoint)))
-    {
-      endPoint=testPoint; 
-      step-=per_step;  
-    }
-  }
-  return false;
-}
 
 
 vec3 dirToWorld(vec3 normal,vec3 localDir)
@@ -274,7 +205,7 @@ void main() {
   vec3 test_dir = vec3(0.0);
   test_dir=reflect(-wo,normal);
   vec3 test_hit;
-  if(RayMarch1(worldPos,test_dir,test_hit))
+  if(RayMarch(worldPos,test_dir,test_hit))
   {
     indir = GetGBufferDiffuse(GetScreenCoordinate(test_hit));    
   }
@@ -291,7 +222,7 @@ void main() {
   //   vec3 hitPos=vec3(0.0);
   //   vec3 direct = normalize(vec3(1.0,0.0,0.0));
   //   direct = normalize(dir);
-  //   //if(RayMarch2(worldPos,direct,hitPos))
+  //   //if(RayMarch(worldPos,direct,hitPos))
   //   {
   //     vec2 uv1=GetScreenCoordinate(hitPos);
   //     // vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)

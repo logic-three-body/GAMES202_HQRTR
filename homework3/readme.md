@@ -42,3 +42,40 @@ L+=dirL*EvalDiffuse(wi,wo,uv0)*scale;
 ![dir+Diff](https://i.loli.net/2021/06/05/73yn8sEIHYKA2LN.gif)
 
 ## RayMarch
+
+```glsl
+bool RayMarch(vec3 ori, vec3 dir, out vec3 hitPos) {
+  vec2 ori_uv = GetScreenCoordinate(ori);
+  vec2 dir_uv = GetScreenCoordinate(dir);
+  float step_size = 2.0/float(total_step)/length(dir_uv);
+  
+  const int first_step=1;
+  for(int i = first_step;i<=total_step;++i)
+  { 
+    vec3 pos = ori+dir*step_size*float(i);
+    vec2 pos_uv = GetScreenCoordinate(pos);
+    if(GetGBufferDepth(pos_uv)+EPS<GetDepth(pos))
+    {
+      hitPos = pos;
+      return true;
+    }
+  }
+ // hitPos = vec3(normalize(dir_uv),0.0);
+  return false;
+}
+```
+
+镜面反射查询
+
+```glsl
+  //test mirro:
+  vec3 test_dir = vec3(0.0);
+  test_dir=reflect(-wo,normal);
+  vec3 test_hit;
+  if(RayMarch(worldPos,test_dir,test_hit))
+  {
+    indir = GetGBufferDiffuse(GetScreenCoordinate(test_hit));    
+  }
+```
+
+![镜面反射handin](https://i.loli.net/2021/06/06/3bDSpK4ZitxrJwe.gif)
