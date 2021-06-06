@@ -197,7 +197,7 @@ bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
   vec2 dir_uv = GetScreenCoordinate(dir);
   float step_size = 2.0/float(total_step)/length(dir_uv);
   
-  const int first_step=10;
+  const int first_step=1;
   for(int i = first_step;i<total_step;++i)
   { 
     vec3 pos = ori+dir*step_size*float(i);
@@ -244,62 +244,6 @@ bool RayMarch3(vec3 ori, vec3 dir, out vec3 hitPos) {
   return false;
 }
 
-// distance functions
-vec3 opRep( vec3 p, float interval ) {
-
-	vec2 q = mod( p.xz, interval ) - interval * 0.5;
-	return vec3( q.x, p.y, q.y );
-
-}
-
-float sphereDist( vec3 p, float r ) {
-
-	return length( opRep( p, 0.5 ) ) - r;
-
-}
-
-float floorDist( vec3 p ){
-
-	return dot(p, vec3( 0.0, 1.0, 0.0 ) ) + 1.0;
-
-}
-
-float sceneDist( vec3 p ) {
-
-	return min(
-		sphereDist( p, 0.5),
-		floorDist( p )//取整
-	);
-
-}
-
-bool RayMarch2( vec3 origin, vec3 ray,out vec3 pos) {
-	// marching loop
-	float dist;
-	float depth = 0.0;
-	pos = origin;
-  bool hit = false;
-	for ( int i = 0; i < total_step; i++ ){
-		dist = sceneDist(pos);
-		depth += dist;
-		pos = origin + depth * ray;
-		if ( abs(dist) < EPS ) break;
-	}
-
-	// hit check 
-	if ( abs(dist) < EPS ) {
-
-		hit = true;
-
-	} else {
-
-		hit = false;
-
-	}
-
-	return hit;
-
-}
 
 vec3 dirToWorld(vec3 normal,vec3 localDir)
 {
@@ -310,7 +254,7 @@ vec3 dirToWorld(vec3 normal,vec3 localDir)
   return tbn*localDir;
 }
 
-#define SAMPLE_NUM 5
+#define SAMPLE_NUM 1
 
 void main() {
   float s = InitRand(gl_FragCoord.xy);
@@ -342,15 +286,15 @@ void main() {
       vec2 uv1=GetScreenCoordinate(hitPos);
       vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
                  *EvalDirectionalLight(uv1); 
-      if((res.x+res.y+res.z)>0.0) 
+      if(length(res)>0.0) 
         indir += res;//avoid neg
       // indir += brdf0*EvalDiffuse(-wi,wo,uv1)
       //            *EvalDirectionalLight(uv1);    
     }
   }
   indir/=float(SAMPLE_NUM);
-  //L= indir*10.0;
-  L+=indir*scale;
+  L= indir*10.0;
+  //L+=indir*scale;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
   gl_FragColor = vec4(vec3(color.rgb), 1.0);
