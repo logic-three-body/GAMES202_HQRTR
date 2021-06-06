@@ -286,7 +286,7 @@ void main() {
       vec2 uv1=GetScreenCoordinate(hitPos);
       // vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
       //            *EvalDirectionalLight(uv1);      
-     vec3 res = EvalDiffuse(direct,vec3(0.0),uv1);
+     vec3 res = EvalDiffuse(-direct,vec3(0.0),uv1);
 
       if(length(res)>0.0) 
         indir += res;//avoid neg
