@@ -19,7 +19,7 @@ varying highp vec4 vPosWorld;
 #define INV_PI 0.31830988618
 #define INV_TWO_PI 0.15915494309
 
-const int total_step = 50;
+const int total_step = 100;
 const float EPS = 1e-4;
 float Rand1(inout float p) {
   p = fract(p * .1031);
@@ -198,17 +198,32 @@ bool RayMarch1(vec3 ori, vec3 dir, out vec3 hitPos) {
   return false;
 }
 
+bool RayMarch2(vec3 ori, vec3 dir, out vec3 hitPos)
+{
+  vec3 pos = ori;
+  for(int i=0;i<total_step;++i)
+  {
+    pos+=dir;
+    vec2 screenPos = GetScreenCoordinate(pos);
+    float uv_depth = GetGBufferDepth(screenPos);
+    float depth = GetDepth(pos);
+    if(uv_depth - depth < EPS)
+    {
+      hitPos = pos;
+      return true;
+    }
+  }
+  return false;
+}
+
 bool RayMarch3(vec3 ori, vec3 dir, out vec3 hitPos) {
-  float step=0.8;
+  float step = 1.0;
+  float per_step=0.1;
   vec3 endPoint = ori;
   for(int i=0;i<total_step;++i)
   {
     vec3 testPoint = endPoint + step*dir;
-    if(step>float(total_step))
-    {
-      return false;
-    }
-    else if((GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint)))<EPS)
+    if((GetDepth(testPoint)-GetGBufferDepth(GetScreenCoordinate(testPoint)))<EPS)
     {
       hitPos = testPoint;
       return true;
@@ -216,7 +231,12 @@ bool RayMarch3(vec3 ori, vec3 dir, out vec3 hitPos) {
     else if(GetDepth(testPoint)<GetGBufferDepth(GetScreenCoordinate(testPoint)))
     {
       endPoint=testPoint;
-      step+=0.1;  
+      step+=per_step;  
+    }
+    else if(GetDepth(testPoint)>GetGBufferDepth(GetScreenCoordinate(testPoint)))
+    {
+      endPoint=testPoint; 
+      step-=per_step;  
     }
   }
   return false;
@@ -249,31 +269,40 @@ void main() {
   vec3 normal = GetGBufferNormalWorld(uv0);
   //raymarch:
   vec3 indir=vec3(0.0);
-  for(int i=0;i<SAMPLE_NUM;++i)
-  {
-    float pdf=0.0;
-    vec3 dir=SampleHemisphereUniform(s,pdf);
-    //vec3 dir=SampleHemisphereCos(s,pdf);
-    dir = dirToWorld(normal,dir);
-    vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
-    vec3 hitPos=vec3(0.0);
-    vec3 direct = normalize(vec3(1.0,0.0,0.0));
-    direct = normalize(dir);
-    if(RayMarch3(worldPos,direct,hitPos))
-    {
-      vec2 uv1=GetScreenCoordinate(hitPos);
-      // vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
-      //            *EvalDirectionalLight(uv1);      
-     vec3 res = EvalDiffuse(-direct,vec3(0.0),uv1);
 
-      if(length(res)>0.0) 
-        indir += res;//avoid neg
-      // indir += brdf0*EvalDiffuse(-wi,wo,uv1)
-      //            *EvalDirectionalLight(uv1);    
-    }
+  //test mirro:
+  vec3 ori = vPosWorld.xyz/vPosWorld.w;
+  vec3 test_dir = normalize(normal*dot(normal,uCameraPos)*2.0-uCameraPos);
+  vec3 test_hit;
+  if(RayMarch1(ori,test_dir,test_hit))
+  {
+    indir = GetGBufferDiffuse(GetScreenCoordinate(test_hit));    
   }
+
+
+  //shading:
+  // for(int i=0;i<SAMPLE_NUM;++i)
+  // {
+  //   float pdf=0.0;
+  //   vec3 dir=SampleHemisphereUniform(s,pdf);
+  //   //vec3 dir=SampleHemisphereCos(s,pdf);
+  //   dir = dirToWorld(normal,dir);
+  //   vec3 brdf0 = EvalDiffuse(wi,wo,uv0)/pdf;
+  //   vec3 hitPos=vec3(0.0);
+  //   vec3 direct = normalize(vec3(1.0,0.0,0.0));
+  //   direct = normalize(dir);
+  //   //if(RayMarch2(worldPos,direct,hitPos))
+  //   {
+  //     vec2 uv1=GetScreenCoordinate(hitPos);
+  //     // vec3 res = brdf0*EvalDiffuse(-wi,vec3(0.0),uv1)
+  //     //            *EvalDirectionalLight(uv1);      
+  //     //vec3 res = EvalDiffuse(-direct,vec3(0.0),uv1);
+  //     if(length(res)>0.0) 
+  //       indir += res;//avoid neg   
+  //   }
+  // }
   indir/=float(SAMPLE_NUM);
-  L= indir*10.0;
+  L= indir;
   //L+=indir*scale;
   vec3 color = pow(clamp(L, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
   //color=vec3(0.6);
