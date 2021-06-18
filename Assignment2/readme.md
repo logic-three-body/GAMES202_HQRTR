@@ -21,3 +21,6 @@ WebGL部分
 
 更改loadOBJ.js TODO *Add your PRTmaterial here* 将PRT材质加入，同时引入precomputeL
 
+项目地址：[here](https://github.com/logic-three-body/GAMES202_HQRTR/tree/master/Assignment2)
+
+//TODO add context
