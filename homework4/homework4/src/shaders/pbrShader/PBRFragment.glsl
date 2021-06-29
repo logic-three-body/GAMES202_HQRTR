@@ -22,8 +22,12 @@ const float PI = 3.14159265359;
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
    // TODO: To calculate GGX NDF here
-   return 1.0;
-    
+   float NdotH = max((dot(N,H)),0.0);
+   float a2 = roughness * roughness;  
+ //  float d = (NdotH * a2 - NdotH) * NdotH + 1.0; // 2 mad  from Unity
+   float d = (a2-1.0)+1.0; 
+ //   return  a2 / ((d * d + 1e-7)*PI);   
+   return a2/(PI*NdotH*NdotH*d*d);
 }
 
 float GeometrySchlickGGX(float NdotV, float roughness)
