@@ -44,10 +44,19 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return 1.0;
 }
 
+float Pow5(float x)
+{
+    return x*x*x*x*x;
+}
+
 vec3 fresnelSchlick(vec3 F0, vec3 V, vec3 H)
 {
     // TODO: To calculate Schlick F here
-    return vec3(1.0);
+    V = normalize(V);
+    H = normalize(H);
+    float cosA = dot(V,H);
+    float t = Pow5(1.0 -cosA);
+    return F0 + (vec3(1.0)-F0) * t;
 }
 
 void main(void) {
