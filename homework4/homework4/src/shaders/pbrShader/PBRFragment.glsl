@@ -40,8 +40,9 @@ float GeometrySchlickGGX(float NdotV, float roughness)
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
     // TODO: To calculate Smith G here
-
-    return 1.0;
+    float k = (roughness+1.0)*(roughness+1.0)/8.0;
+    float NdotV = max(dot(N,V),0.0);
+    return NdotV/(NdotV*(1.0-k)+k);
 }
 
 float Pow5(float x)
