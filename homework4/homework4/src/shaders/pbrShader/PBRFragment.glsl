@@ -33,16 +33,17 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
     // TODO: To calculate Smith G1 here
-    
-    return 1.0;
+    float k = (roughness+1.0)*(roughness+1.0)/8.0;  
+    return NdotV/(NdotV*(1.0-k)+k);
 }
 
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
     // TODO: To calculate Smith G here
-    float k = (roughness+1.0)*(roughness+1.0)/8.0;
-    float NdotV = max(dot(N,V),0.0);
-    return NdotV/(NdotV*(1.0-k)+k);
+    vec3 H = normalize(V + L);
+    float VdotH = max(dot(L,H),0.0);
+    float LdotH = max(dot(V,H),0.0);
+    return GeometrySchlickGGX(VdotH,roughness)*GeometrySchlickGGX(LdotH,roughness);
 }
 
 float Pow5(float x)
