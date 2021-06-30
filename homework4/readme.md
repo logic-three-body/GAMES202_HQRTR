@@ -125,6 +125,36 @@ Vec3f IntegrateBRDF(Vec3f V, float roughness, float NdotV) {
 }
 ```
 
-![GGX_E_MC_LUT](E:\college class\计算机图形学\高质量实时渲染\homework4\lut-gen\build\GGX_E_MC_LUT.png)
+![GGX_E_MC_LUT](https://i.loli.net/2021/06/30/dDOTAH9BfM7Nu5r.png)
 
 #### 重要性采样
+
+
+
+### 实时计算
+
+```glsl
+vec3 MultiScatterBRDF(float NdotL, float NdotV)
+{
+  vec3 albedo = pow(texture2D(uAlbedoMap, vTextureCoord).rgb, vec3(2.2));
+
+  vec3 E_o = texture2D(uBRDFLut, vec2(NdotL, uRoughness)).xyz;
+  vec3 E_i = texture2D(uBRDFLut, vec2(NdotV, uRoughness)).xyz;
+
+  vec3 E_avg = texture2D(uEavgLut, vec2(0, uRoughness)).xyz;
+  // copper
+  vec3 edgetint = vec3(0.827, 0.792, 0.678);
+  vec3 F_avg = AverageFresnel(albedo, edgetint);
+  
+  // TODO: To calculate fms and missing energy here
+  vec3 fms = (vec3(1.0)-E_o)*(vec3(1.0)-E_i)/(PI*(vec3(1.0)-E_avg));
+  vec3 F_add = F_avg*E_avg/(vec3(1.0)-F_avg*(vec3(1.0)-E_avg));
+
+  return F_add*fms;
+  
+}
+```
+
+![kulla-conty2](https://i.loli.net/2021/06/30/EtFIO71aSwjd9zU.gif)
+
+![image-20210630234150696](C:\Users\lenovo\AppData\Roaming\Typora\typora-user-images\image-20210630234150696.png)
