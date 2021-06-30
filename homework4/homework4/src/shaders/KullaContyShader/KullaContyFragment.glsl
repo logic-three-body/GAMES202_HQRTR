@@ -22,31 +22,30 @@ const float PI = 3.14159265359;
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
-   // TODO: To calculate GGX NDF here
-   float NdotH = max((dot(N,H)),0.0);
-   float NdotH2 = NdotH * NdotH;
-   float a2 = roughness * roughness;  
- //  float d = (NdotH * a2 - NdotH) * NdotH + 1.0; // 2 mad  from Unity
-   float d = (a2-1.0)+1.0; 
-   float d2 =d*d;
- //   return  a2 / ((d * d + 1e-7)*PI);   
-   return a2/(PI*NdotH2*d2);
+    float a = roughness*roughness;
+    float a2 = a*a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+    float nom   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+    return nom / max(denom, 0.0001);
 }
 
-float GeometrySchlickGGX(float NdotV, float roughness)
-{
-    // TODO: To calculate Smith G1 here
-    float k = (roughness+1.0)*(roughness+1.0)/8.0;  
-    return NdotV/(NdotV*(1.0-k)+k);
+float GeometrySchlickGGX(float NdotV, float roughness) {
+    float a = roughness;
+    float k = (a * a) / 2.0;
+    float nom = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+    return nom / denom;
 }
 
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
     // TODO: To calculate Smith G here
-    vec3 H = normalize(V + L);
-    float VdotH = max(dot(L,H),0.0);
-    float LdotH = max(dot(V,H),0.0);
-    return GeometrySchlickGGX(LdotH,roughness)*GeometrySchlickGGX(VdotH,roughness);
+    float NdotL = max(dot(N,L),0.0);
+    float NdotV = max(dot(N,V),0.0);
+    return GeometrySchlickGGX(NdotL, roughness)*GeometrySchlickGGX(NdotV, roughness);
 }
 
 float Pow5(float x)
@@ -57,8 +56,8 @@ float Pow5(float x)
 vec3 fresnelSchlick(vec3 F0, vec3 V, vec3 H)
 {
     // TODO: To calculate Schlick F here
-    float cosA = dot(V,H);
-    float t = Pow5(1.0 -cosA);
+    float cosA = max(dot(V,H),0.0);
+    float t = Pow5(1.0 - cosA);
     return F0 + (vec3(1.0)-F0) * t;
 }
 
@@ -86,7 +85,7 @@ vec3 MultiScatterBRDF(float NdotL, float NdotV)
   // TODO: To calculate fms and missing energy here
 
 
-  return vec3(1.0);
+  return vec3(0.0);
   
 }
 

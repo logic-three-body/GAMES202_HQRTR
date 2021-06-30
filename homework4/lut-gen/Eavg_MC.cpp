@@ -12,9 +12,9 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
-int resolution = 128;
-int channel = 3;
+#define M_PI       3.14159265358979323846   // pi
+const int resolution = 128;
+const int channel = 3;
 
 typedef struct samplePoints {
     std::vector<Vec3f> directions;
@@ -87,7 +87,7 @@ Vec3f IntegrateEmu(Vec3f V, float roughness, float NdotV, Vec3f Ei) {
 
 
 int main() {
-    unsigned char *Edata = stbi_load("./GGX_E_MC_LUT.png", &resolution, &resolution, &channel, 3);
+    unsigned char *Edata = stbi_load("./GGX_E_MC_LUT.png", (int*)&resolution, (int*)&resolution, (int*)&channel, 3);
     if (Edata == NULL) 
     {
 		std::cout << "ERROE_FILE_NOT_LOAD" << std::endl;

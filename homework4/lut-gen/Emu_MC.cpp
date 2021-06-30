@@ -6,12 +6,12 @@
 #include <fstream>
 #include <random>
 #include "vec.h"
-
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
 #include "stb_image_write.h"
 
 const int resolution = 128;
+#define M_PI       3.14159265358979323846   // pi
 
 typedef struct samplePoints {
     std::vector<Vec3f> directions;
@@ -79,13 +79,24 @@ Vec3f IntegrateBRDF(Vec3f V, float roughness, float NdotV) {
     float C = 0.0;
     const int sample_count = 1024;
     Vec3f N = Vec3f(0.0, 0.0, 1.0);
-    
+	float R0 = 1.0f;
     samplePoints sampleList = squareToCosineHemisphere(sample_count);
     for (int i = 0; i < sample_count; i++) {
       // TODO: To calculate (fr * ni) / p_o here
-      
+		Vec3f L = normalize(sampleList.directions[i]);
+		Vec3f H = normalize(V + L);
+		float cosA = std::max(0.0f,dot(V,H));
+		float NdotL = std::max(dot(N, L), 0.0f);
+		float F = R0 + (1.0f-R0)*pow(1- cosA,5.0f);
+		float G = GeometrySmith(roughness, NdotV, NdotL);
+		float D = DistributionGGX(N,H,roughness);
+		float numerator = D * G * F;
+		float denominator = 4.0f * NdotV * NdotL;
+		float Fmicro = numerator / std::max(denominator, 1e-7f);
+		float pdf = sampleList.PDFs[i];
+		A += Fmicro * NdotL / pdf;
     }
-
+	B = C = A;
     return {A / sample_count, B / sample_count, C / sample_count};
 }
 
