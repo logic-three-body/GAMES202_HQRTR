@@ -25,11 +25,11 @@ float DistributionGGX(vec3 N, vec3 H, float roughness)
    float NdotH = max((dot(N,H)),0.0);
    float NdotH2 = NdotH * NdotH;
    float a2 = roughness * roughness;  
- //  float d = (NdotH * a2 - NdotH) * NdotH + 1.0; // 2 mad  from Unity
-   float d = (a2-1.0)+1.0; 
-   float d2 =d*d;
- //   return  a2 / ((d * d + 1e-7)*PI);   
-   return a2/(PI*NdotH2*d2);
+   float d = (NdotH * a2 - NdotH) * NdotH + 1.0; // 2 mad  from Unity
+   //float d = (a2-1.0)+1.0; 
+   //float d2 =d*d;
+   return  a2 / ((d * d + 1e-7)*PI);   
+   //return a2/(PI*NdotH2*d2);
 }
 
 float GeometrySchlickGGX(float NdotV, float roughness)
