@@ -157,4 +157,4 @@ vec3 MultiScatterBRDF(float NdotL, float NdotV)
 
 ![kulla-conty2](https://i.loli.net/2021/06/30/EtFIO71aSwjd9zU.gif)
 
-![image-20210630234150696](C:\Users\lenovo\AppData\Roaming\Typora\typora-user-images\image-20210630234150696.png)
+![image-20210630234150696](https://i.loli.net/2021/06/30/wDyG3rPNB9Lx4kt.png)
