@@ -78,4 +78,16 @@ vec3 fresnelSchlick(vec3 F0, vec3 V, vec3 H)
 
 ![image-20210630150640416](https://i.loli.net/2021/06/30/6xP1VU4fHjcbuvB.png)
 
+roughness=0.35
+
+![detail0.35](https://i.loli.net/2021/06/30/o4j5zJkOrpaSEAs.png)
+
+roughness=0.55
+
+![detail0.75](https://i.loli.net/2021/06/30/iYVMm3LjSako2Wf.png)
+
+roughness=0.95
+
+![detail0.95](https://i.loli.net/2021/06/30/pS6Z75uYhdjAl9U.png)
+
 ## Kulla-Conty
