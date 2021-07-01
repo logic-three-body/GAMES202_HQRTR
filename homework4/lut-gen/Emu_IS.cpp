@@ -6,6 +6,7 @@
 #include <fstream>
 #include <random>
 #include "vec.h"
+#include<cmath>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
@@ -27,23 +28,34 @@ Vec3f ImportanceSampleGGX(Vec2f Xi, Vec3f N, float roughness) {
     float a = roughness * roughness;
 
     //TODO: in spherical space - Bonus 1
-
-
+	float Phi = 2 * PI * Xi.x;
     //TODO: from spherical space to cartesian space - Bonus 1
- 
+	float CosTheta = sqrt((1-Xi.y)/(1+(a*a-1)*Xi.y));
+	float SinTheta = sqrt(1 - CosTheta * CosTheta);
+
+	Vec3f H;
+	H.x = SinTheta * cos(Phi);
+	H.y = SinTheta * sin(Phi);
+	H.z = CosTheta;
 
     //TODO: tangent coordinates - Bonus 1
-
-
+	Vec3f UpVector = abs(N.z) < 0.999 ? Vec3f(0.0f, 0.0f, 1.0f) : Vec3f(1.0f, 0.0f, 0.0f);
+	Vec3f TangentX = normalize(cross(UpVector, N));
+	Vec3f TangentY = cross(N, TangentX);
     //TODO: transform H to tangent space - Bonus 1
-    
-    return Vec3f(1.0f);
+	Vec3f result = TangentX * H.x+TangentY*H.y+N*H.z;
+    return result;
 }
 
 float GeometrySchlickGGX(float NdotV, float roughness) {
     // TODO: To calculate Schlick G1 here - Bonus 1
-    
-    return 1.0f;
+	float a = roughness;
+	float k = (a * a) / 2.0f;
+
+	float nom = NdotV;
+	float denom = NdotV * (1.0f - k) + k;
+
+	return nom / denom;
 }
 
 float GeometrySmith(float roughness, float NoV, float NoL) {
@@ -54,7 +66,9 @@ float GeometrySmith(float roughness, float NoV, float NoL) {
 }
 
 Vec3f IntegrateBRDF(Vec3f V, float roughness) {
-
+	float A = 0.0;
+	float B = 0.0;
+	float C = 0.0;
     const int sample_count = 1024;
     Vec3f N = Vec3f(0.0, 0.0, 1.0);
     for (int i = 0; i < sample_count; i++) {
@@ -68,13 +82,13 @@ Vec3f IntegrateBRDF(Vec3f V, float roughness) {
         float NoV = std::max(dot(N, V), 0.0f);
         
         // TODO: To calculate (fr * ni) / p_o here - Bonus 1
-
+		A += VoH * GeometrySmith(NoV, NoL, roughness) / (NoV*NoH);
 
         // Split Sum - Bonus 2
         
     }
-
-    return Vec3f(1.0f);
+	B = C = A;
+	return { A / sample_count, B / sample_count, C / sample_count };
 }
 
 int main() {
