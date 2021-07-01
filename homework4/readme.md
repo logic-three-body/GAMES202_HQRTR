@@ -1,5 +1,7 @@
 # GAMES202->assignment4 Kulla-Conty BRDF
 
+项目地址：[here](https://github.com/logic-three-body/GAMES202_HQRTR/tree/master/homework4)
+
 ## PBR
 
 ### 初始状态
