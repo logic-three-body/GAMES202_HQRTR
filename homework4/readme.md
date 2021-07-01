@@ -129,7 +129,72 @@ Vec3f IntegrateBRDF(Vec3f V, float roughness, float NdotV) {
 
 #### 重要性采样
 
+```c++
+Vec3f ImportanceSampleGGX(Vec2f Xi, Vec3f N, float roughness) {
+    float a = roughness * roughness;
 
+    //TODO: in spherical space - Bonus 1
+	float Phi = 2 * PI * Xi.x;
+    //TODO: from spherical space to cartesian space - Bonus 1
+	float CosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a*a - 1.0) * Xi.y));
+	float SinTheta = sqrt(1.0 - CosTheta * CosTheta);
+
+	Vec3f H;
+	H.x = SinTheta * cos(Phi);
+	H.y = SinTheta * sin(Phi);
+	H.z = CosTheta;
+
+    //TODO: tangent coordinates - Bonus 1
+	Vec3f UpVector = abs(N.z) < 0.999 ? Vec3f(0.0f, 0.0f, 1.0f) : Vec3f(1.0f, 0.0f, 0.0f);
+	Vec3f TangentX = normalize(cross(UpVector, N));
+	Vec3f TangentY = cross(N, TangentX);
+    //TODO: transform H to tangent space - Bonus 1
+	Vec3f result = TangentX * H.x + TangentY * H.y + N * H.z;
+	return normalize(result);
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness) {
+    // TODO: To calculate Schlick G1 here - Bonus 1
+	float a = roughness;
+	float k = (a * a) / 2.0f;
+
+	float nom = NdotV;
+	float denom = NdotV * (1.0f - k) + k;
+
+	return nom / denom;
+}
+```
+
+```c++
+Vec3f IntegrateBRDF(Vec3f V, float roughness) {
+	float A = 0.0;
+	float B = 0.0;
+	float C = 0.0;
+	float R0 = 1.0f;
+
+    const int sample_count = 1024;
+    Vec3f N = Vec3f(0.0, 0.0, 1.0);
+    for (int i = 0; i < sample_count; i++) {
+        Vec2f Xi = Hammersley(i, sample_count);
+        Vec3f H = ImportanceSampleGGX(Xi, N, roughness);
+        Vec3f L = normalize(H * 2.0f * dot(V, H) - V);
+
+        float NoL = std::max(L.z, 0.0f);
+        float NoH = std::max(H.z, 0.0f);
+        float VoH = std::max(dot(V, H), 0.0f);
+        float NoV = std::max(dot(N, V), 0.0f);
+        
+		float cosA = VoH;
+		float F = R0 + (1.0f - R0)*pow(1 - cosA, 5.0f);
+        // TODO: To calculate (fr * ni) / p_o here - Bonus 1
+		A += F * VoH * GeometrySmith(roughness,NoV, NoL) / (NoV*NoH);      
+    }
+	B = C = A;
+	return { A / sample_count, B / sample_count, C / sample_count };
+}
+```
+
+![GGX_E_LUT](E:\college class\计算机图形学\高质量实时渲染\homework4\image\kulla-conty\预计算E(μ)\GGX_E_LUT.png)
 
 ### 预计算Eavg
 
