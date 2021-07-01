@@ -93,6 +93,7 @@ Vec3f IntegrateBRDF(Vec3f V, float roughness) {
         
     }
 	B = C = A;
+	//B = C = A = 1 - A;
 	return { A / sample_count, B / sample_count, C / sample_count };
 }
 

@@ -196,6 +196,29 @@ Vec3f IntegrateBRDF(Vec3f V, float roughness) {
 
 ![GGX_E_LUT](https://i.loli.net/2021/07/01/85NhKpGetYoaM6B.png)
 
+1-Eμ检验
+
+```c++
+Vec3f IntegrateBRDF(Vec3f V, float roughness) {
+	float A = 0.0;
+	float B = 0.0;
+	float C = 0.0;
+	float R0 = 1.0f;
+
+    const int sample_count = 1024;
+    Vec3f N = Vec3f(0.0, 0.0, 1.0);
+    for (int i = 0; i < sample_count; i++) {
+	    //... some code
+        // TODO: To calculate (fr * ni) / p_o here - Bonus 1
+		A += F * VoH * GeometrySmith(roughness,NoV, NoL) / (NoV*NoH);        
+    }
+	B = C = A = 1 - A;
+	return { A / sample_count, B / sample_count, C / sample_count };
+}
+```
+
+![1-Eu](https://i.loli.net/2021/07/01/xcLgkXsSQheEj3G.png)
+
 ### 预计算Eavg
 
 #### 蒙特卡洛方法
@@ -227,32 +250,6 @@ Vec3f IntegrateEmu(Vec3f V, float roughness, float NdotV, Vec3f Ei) {
 ![GGX_Eavg_LUT](https://i.loli.net/2021/07/01/CEc3DlKRe84HJxV.png)
 
 #### 重要性采样
-
-```C++
-Vec3f IntegrateEmu(Vec3f V, float roughness, float NdotV, Vec3f Ei) {
-    Vec3f Eavg = Vec3f(0.0f);
-    const int sample_count = 1024;
-    Vec3f N = Vec3f(0.0, 0.0, 1.0);
-
-    for (int i = 0; i < sample_count; i++) 
-    {
-        Vec2f Xi = Hammersley(i, sample_count);
-        Vec3f H = ImportanceSampleGGX(Xi, N, roughness);
-        Vec3f L = normalize(H * 2.0f * dot(V, H) - V);
-
-        float NoL = std::max(L.z, 0.0f);
-        float NoH = std::max(H.z, 0.0f);
-        float VoH = std::max(dot(V, H), 0.0f);
-        float NoV = std::max(dot(N, V), 0.0f);
-
-        // TODO: To calculate Eavg here - Bonus 1
-		Eavg += Ei * NoV*2.0f;
-    }
-
-    return Eavg / sample_count;
-}
-```
-
 ![GGX_Eavg_LUT](https://i.loli.net/2021/07/01/ESWjv5taRqnb9xI.png)
 
 ### 实时计算
