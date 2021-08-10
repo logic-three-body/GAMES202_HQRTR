@@ -37,16 +37,96 @@ void Denoiser::TemporalAccumulation(const Buffer2D<Float3> &curFilteredColor) {
     std::swap(m_misc, m_accColor);
 }
 
+/*
+reference:
+https://github.com/ydaiydai/Filtering/blob/main/main.cpp
+*/
+
+// Joint bilateral filter kernel
+float J_kernel(float distanceSqr, float colorDistSqr, float normalDistSqr,
+               float positionDistSqr, float sigma_p, float sigma_c, float sigma_n,
+               float sigma_d) {
+
+    return exp(-(distanceSqr / (2 * Sqr(sigma_p))) -
+               (colorDistSqr / (2 * Sqr(sigma_c))) -
+               (normalDistSqr / (2 * Sqr(sigma_n))) -
+               (positionDistSqr / (2 * Sqr(sigma_d))));
+}
+
+// Find the distance between pixels
+float distanceSqr(int i_x, int i_y, int j_x, int j_y) {
+    return float(pow((i_x - j_x), 2) + pow((i_y - j_y), 2));
+}
+
+// clamp function
+float clamp(float num, float low, float high) {
+    if (num > high) {
+        return high;
+    } else if (num < low) {
+        return low;
+    } else {
+        return num;
+    }
+}
+
 Buffer2D<Float3> Denoiser::Filter(const FrameInfo &frameInfo) {
     int height = frameInfo.m_beauty.m_height;
     int width = frameInfo.m_beauty.m_width;
-    Buffer2D<Float3> filteredImage = CreateBuffer2D<Float3>(width, height);
+    Buffer2D<Float3> filteredImage = CreateBuffer2D<Float3>(width, height);//color
+    Buffer2D<Float3> filteredNormal = CreateBuffer2D<Float3>(width, height); // normal
+    Buffer2D<Float3> filteredPos = CreateBuffer2D<Float3>(width, height); // position
     int kernelRadius = 16;
+    // Parameters
+
 #pragma omp parallel for
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
             // TODO: Joint bilateral filter
             filteredImage(x, y) = frameInfo.m_beauty(x, y);
+            filteredNormal(x, y) = frameInfo.m_normal(x, y);
+            filteredPos(x, y) = frameInfo.m_position(x, y);
+
+            float weight = 0.0;//weight_xy sum
+            for (int i_y = y - kernelRadius; i_y <= y + kernelRadius; ++i_y) 
+			{
+                for (int i_x = x - kernelRadius; i_x <= x + kernelRadius; ++i_x) 
+				{
+                    float w_ixy = 0.0;
+					//Out of Bounds
+                    if (i_y<0||i_y>=height||i_x<0||i_x>=width) 
+					{
+                        continue;
+                    } 
+					else 
+					{
+                        filteredImage(i_x, i_y) = frameInfo.m_beauty(i_x, i_y);
+                        filteredNormal(i_x, i_y)= frameInfo.m_normal(i_x, i_y);
+                        filteredPos(i_x, i_y) = frameInfo.m_position(i_x, i_y);
+                        float DisSqr = distanceSqr(x, y, i_x, i_y);
+                        float colorDistSqr =
+                            SqrLength(filteredImage(x, y) - filteredImage(i_x, i_y));
+                        float NormDot =
+                            Dot(filteredNormal(x, y), filteredNormal(i_x, i_y));
+                        float DnormalSqr = Sqr(SafeAcos(NormDot));
+                        Float3 DistancePos =//don't divide into zero
+                            (filteredPos(i_x, i_y) - filteredPos(x, y)) /
+                            clamp(Distance(filteredPos(i_x, i_y), filteredPos(x, y)),1e-5,1.0);
+                        float Dplane = Dot(filteredNormal(x, y), DistancePos);
+
+						w_ixy = J_kernel(DisSqr, colorDistSqr, DnormalSqr, Dplane,m_sigmaCoord,m_sigmaColor,m_sigmaNormal,m_sigmaPlane);
+                        filteredImage(x, y) += filteredImage(i_x, i_y) * w_ixy;
+						//add weights
+                        weight += w_ixy;                       
+					}
+                }
+            }
+            if (0.0!=weight) 
+			{
+                filteredImage(x, y) /= weight;
+                filteredImage(x, y) = 0.0;
+            }
+            filteredImage(x, y) = 0.0;
+
         }
     }
     return filteredImage;
