@@ -72,7 +72,8 @@ float clamp(float num, float low, float high) {
 Buffer2D<Float3> Denoiser::Filter(const FrameInfo &frameInfo) {
     int height = frameInfo.m_beauty.m_height;
     int width = frameInfo.m_beauty.m_width;
-    Buffer2D<Float3> filteredImage = CreateBuffer2D<Float3>(width, height);//color
+    Buffer2D<Float3> filteredImage = CreateBuffer2D<Float3>(width, height);  // color
+    Buffer2D<Float3> FinalImage = CreateBuffer2D<Float3>(width, height);  // color
     Buffer2D<Float3> filteredNormal = CreateBuffer2D<Float3>(width, height); // normal
     Buffer2D<Float3> filteredPos = CreateBuffer2D<Float3>(width, height); // position
     int kernelRadius = 16;
@@ -99,7 +100,7 @@ Buffer2D<Float3> Denoiser::Filter(const FrameInfo &frameInfo) {
                     } 
 					else 
 					{
-                        filteredImage(i_x, i_y) = frameInfo.m_beauty(i_x, i_y)*10000.0f;
+                        filteredImage(i_x, i_y) = frameInfo.m_beauty(i_x, i_y);
                         filteredNormal(i_x, i_y)= frameInfo.m_normal(i_x, i_y);
                         filteredPos(i_x, i_y) = frameInfo.m_position(i_x, i_y);
                         float DisSqr = distanceSqr(x, y, i_x, i_y);
@@ -114,7 +115,7 @@ Buffer2D<Float3> Denoiser::Filter(const FrameInfo &frameInfo) {
                         float Dplane = Dot(filteredNormal(x, y), DistancePos);
 
 						w_ixy = J_kernel(DisSqr, colorDistSqr, DnormalSqr, Dplane,m_sigmaCoord,m_sigmaColor,m_sigmaNormal,m_sigmaPlane);
-                        filteredImage(x, y) += filteredImage(i_x, i_y) * w_ixy;
+                        FinalImage(x, y) += filteredImage(i_x, i_y) * w_ixy;
 						//add weights
                         weight += w_ixy;                       
 					}
@@ -122,14 +123,15 @@ Buffer2D<Float3> Denoiser::Filter(const FrameInfo &frameInfo) {
             }
             if (0.0!=weight) 
 			{
-                filteredImage(x, y) /= weight;
+                FinalImage(x, y) /= weight;
             }
             //filteredImage(x, y) = float(0.0);
 
         }
     }
   
-    return filteredImage;
+    //return filteredImage;
+    return FinalImage;
 }
 
 void Denoiser::Init(const FrameInfo &frameInfo, const Buffer2D<Float3> &filteredColor) {
