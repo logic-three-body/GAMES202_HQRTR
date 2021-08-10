@@ -99,7 +99,7 @@ Buffer2D<Float3> Denoiser::Filter(const FrameInfo &frameInfo) {
                     } 
 					else 
 					{
-                        filteredImage(i_x, i_y) = frameInfo.m_beauty(i_x, i_y);
+                        filteredImage(i_x, i_y) = frameInfo.m_beauty(i_x, i_y)*10000.0f;
                         filteredNormal(i_x, i_y)= frameInfo.m_normal(i_x, i_y);
                         filteredPos(i_x, i_y) = frameInfo.m_position(i_x, i_y);
                         float DisSqr = distanceSqr(x, y, i_x, i_y);
@@ -123,12 +123,12 @@ Buffer2D<Float3> Denoiser::Filter(const FrameInfo &frameInfo) {
             if (0.0!=weight) 
 			{
                 filteredImage(x, y) /= weight;
-                filteredImage(x, y) = 0.0;
             }
-            filteredImage(x, y) = 0.0;
+            //filteredImage(x, y) = float(0.0);
 
         }
     }
+  
     return filteredImage;
 }
 
