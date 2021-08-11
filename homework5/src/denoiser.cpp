@@ -65,6 +65,11 @@ Buffer2D<Float3> Denoiser::Filter(const FrameInfo &frameInfo) {
     Buffer2D<Float3> filteredNormal = CreateBuffer2D<Float3>(width, height); // normal
     Buffer2D<Float3> filteredPos = CreateBuffer2D<Float3>(width, height);    // position
     int kernelRadius = 16;
+    if (1280 == width) {// for pink-room
+        //m_sigmaColor = 2.4;
+        //m_sigmaColor = 4.4;
+        m_sigmaColor = 8.4; 
+    }
     // Parameters
 
 #pragma omp parallel for
