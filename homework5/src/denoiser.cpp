@@ -13,6 +13,11 @@ void Denoiser::Reprojection(const FrameInfo &frameInfo) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             // TODO: Reproject
+            float id = frameInfo.m_id(x, y);
+            if (-1.0f != id) 
+			{
+                Matrix4x4 InvModel = Inverse(frameInfo.m_matrix[id]);
+            }
             m_valid(x, y) = false;
             m_misc(x, y) = Float3(0.f);
         }
