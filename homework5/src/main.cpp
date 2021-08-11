@@ -56,7 +56,6 @@ int main() {
     filesystem::path outputDir("examples/box/output");
     int frameNum = 20;
 
-   
     // Pink room
     filesystem::path inputDir2("examples/pink-room/input");
     filesystem::path outputDir2("examples/pink-room/output");
@@ -65,6 +64,6 @@ int main() {
     std::cout << "Box:\n";
     Denoise(inputDir, outputDir, frameNum);
     std::cout << "Pink room:\n";
- //   Denoise(inputDir2, outputDir2, frameNum2);
+    //   Denoise(inputDir2, outputDir2, frameNum2);
     return 0;
 }

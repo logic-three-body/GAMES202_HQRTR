@@ -17,15 +17,15 @@ void Denoiser::Reprojection(const FrameInfo &frameInfo) {
             if (-1.0f != id) {
                 Matrix4x4 InvModel = Inverse(frameInfo.m_matrix[id]);
                 Matrix4x4 PreModel = m_preFrameInfo.m_matrix[id];
-                Matrix4x4 PreMVP =//上一点屏幕坐标<-MVP(上一帧即运动前)-运动前模型坐标<-逆模型矩阵-当前位置
-                    preWorldToScreen * preWorldToCamera * PreModel * InvModel;
-                Float3 proj_pos = PreMVP(frameInfo.m_position(x,y), Float3::Point);
+                Matrix4x4 Reprojection =//上一点屏幕坐标<-MVP(上一帧即运动前)-运动前模型坐标<-逆模型矩阵-当前位置
+                    preWorldToScreen * PreModel * InvModel;
+                Float3 proj_pos = Reprojection(frameInfo.m_position(x, y), Float3::Point);
 
-                int prex = proj_pos.x;
-                int prey = proj_pos.y;
+                int prex = static_cast<int>(proj_pos.x);
+                int prey = static_cast<int>(proj_pos.y);
 
-                if (prex < 0 || prex >= width || prey < 0 || prey >= height ||
-                    m_preFrameInfo.m_id(prex, prey) != id) {
+                if (prex < 0 || prex >= width || prey < 0 || prey >= height /*||
+                    m_preFrameInfo.m_id(prex, prey) != id*/) {
                     m_valid(x, y) = false;
                     continue;
                 } else {
@@ -49,7 +49,8 @@ void Denoiser::TemporalAccumulation(const Buffer2D<Float3> &curFilteredColor) {
             Float3 color = m_accColor(x, y);
             // TODO: Exponential moving average
             float alpha = 1.0f;
-            m_misc(x, y) = Lerp(color, curFilteredColor(x, y), alpha);
+            //m_misc(x, y) = Lerp(color, curFilteredColor(x, y), alpha);
+            m_misc(x, y) = Lerp(curFilteredColor(x, y), color, alpha);
         }
     }
     std::swap(m_misc, m_accColor);
