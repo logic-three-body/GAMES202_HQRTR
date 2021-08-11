@@ -9,17 +9,30 @@ void Denoiser::Reprojection(const FrameInfo &frameInfo) {
         m_preFrameInfo.m_matrix[m_preFrameInfo.m_matrix.size() - 1];
     Matrix4x4 preWorldToCamera =
         m_preFrameInfo.m_matrix[m_preFrameInfo.m_matrix.size() - 2];
-#pragma omp parallel for
+    //#pragma omp parallel for
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             // TODO: Reproject
             float id = frameInfo.m_id(x, y);
-            if (-1.0f != id) 
-			{
+            if (-1.0f != id) {
                 Matrix4x4 InvModel = Inverse(frameInfo.m_matrix[id]);
+                Matrix4x4 PreModel = m_preFrameInfo.m_matrix[id];
+                Matrix4x4 PreMVP =//上一点屏幕坐标<-MVP(上一帧即运动前)-运动前模型坐标<-逆模型矩阵-当前位置
+                    preWorldToScreen * preWorldToCamera * PreModel * InvModel;
+                Float3 proj_pos = PreMVP(frameInfo.m_position(x,y), Float3::Point);
+
+                int prex = proj_pos.x;
+                int prey = proj_pos.y;
+
+                if (prex < 0 || prex >= width || prey < 0 || prey >= height ||
+                    m_preFrameInfo.m_id(prex, prey) != id) {
+                    m_valid(x, y) = false;
+                    continue;
+                } else {
+                    m_valid(x, y) = true;
+                    m_misc(x, y) = m_accColor(prex, prey);
+                }
             }
-            m_valid(x, y) = false;
-            m_misc(x, y) = Float3(0.f);
         }
     }
     std::swap(m_misc, m_accColor);
@@ -70,64 +83,65 @@ Buffer2D<Float3> Denoiser::Filter(const FrameInfo &frameInfo) {
     Buffer2D<Float3> filteredNormal = CreateBuffer2D<Float3>(width, height); // normal
     Buffer2D<Float3> filteredPos = CreateBuffer2D<Float3>(width, height);    // position
     int kernelRadius = 16;
-    if (1280 == width) {// for pink-room
-        //m_sigmaColor = 2.4;
-        //m_sigmaColor = 4.4;
-        m_sigmaColor = 8.4; 
+    if (1280 == width) { // for pink-room
+        // m_sigmaColor = 2.4;
+        // m_sigmaColor = 4.4;
+        m_sigmaColor = 8.4;
     }
     // Parameters
 
-#pragma omp parallel for
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            // TODO: Joint bilateral filter
-            filteredImage(x, y) = frameInfo.m_beauty(x, y);
-            filteredNormal(x, y) = Normalize(frameInfo.m_normal(x, y));
-            filteredPos(x, y) = frameInfo.m_position(x, y);
-
-            float weight = 0.0; // weight_xy sum
-            for (int i_y = y - kernelRadius; i_y <= y + kernelRadius; ++i_y) {
-                for (int i_x = x - kernelRadius; i_x <= x + kernelRadius; ++i_x) {
-                    float w_ixy = 0.0;
-                    // Out of Bounds
-                    if (i_y < 0 || i_y >= height || i_x < 0 || i_x >= width) {
-                        continue;
-                    } else {
-                        filteredImage(i_x, i_y) = frameInfo.m_beauty(i_x, i_y);
-                        filteredNormal(i_x, i_y) =
-                            Normalize(frameInfo.m_normal(i_x, i_y));
-                        filteredPos(i_x, i_y) = frameInfo.m_position(i_x, i_y);
-                        float DisSqr = distanceSqr(x, y, i_x, i_y);
-                        float colorDistSqr =
-                            SqrLength(filteredImage(x, y) - filteredImage(i_x, i_y));
-                        float NormDot =
-                            Dot(filteredNormal(x, y), filteredNormal(i_x, i_y));
-                        NormDot = std::clamp(NormDot, 0.0f, 1.0f);
-
-                        float DnormalSqr = Sqr(SafeAcos(NormDot));
-                        Float3 DistancePos =
-                            Normalize((filteredPos(i_x, i_y) - filteredPos(x, y)));
-                        float Dplane = Dot(filteredNormal(x, y), DistancePos);
-                        Dplane = std::clamp(Dplane, 1e-5f,1.0f);
-
-                        w_ixy = J_kernel(DisSqr, colorDistSqr, DnormalSqr, Dplane,
-                                         m_sigmaCoord, m_sigmaColor, m_sigmaNormal,
-                                         m_sigmaPlane);
-                        FinalImage(x, y) += filteredImage(i_x, i_y) * w_ixy;
-                        // add weights
-                        weight += w_ixy;
+    #pragma omp parallel for
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                 //TODO: Joint bilateral filter
+                filteredImage(x, y) = frameInfo.m_beauty(x, y);
+                filteredNormal(x, y) = Normalize(frameInfo.m_normal(x, y));
+                filteredPos(x, y) = frameInfo.m_position(x, y);
+    
+                float weight = 0.0; // weight_xy sum
+                for (int i_y = y - kernelRadius; i_y <= y + kernelRadius; ++i_y) {
+                    for (int i_x = x - kernelRadius; i_x <= x + kernelRadius; ++i_x) {
+                        float w_ixy = 0.0;
+                         //Out of Bounds
+                        if (i_y < 0 || i_y >= height || i_x < 0 || i_x >= width) {
+                            continue;
+                        } else {
+                            filteredImage(i_x, i_y) = frameInfo.m_beauty(i_x, i_y);
+                            filteredNormal(i_x, i_y) =
+                                Normalize(frameInfo.m_normal(i_x, i_y));
+                            filteredPos(i_x, i_y) = frameInfo.m_position(i_x, i_y);
+                            float DisSqr = distanceSqr(x, y, i_x, i_y);
+                            float colorDistSqr =
+                                SqrLength(filteredImage(x, y) - filteredImage(i_x,
+                                i_y));
+                            float NormDot =
+                                Dot(filteredNormal(x, y), filteredNormal(i_x, i_y));
+                            NormDot = std::clamp(NormDot, 0.0f, 1.0f);
+    
+                            float DnormalSqr = Sqr(SafeAcos(NormDot));
+                            Float3 DistancePos =
+                                Normalize((filteredPos(i_x, i_y) - filteredPos(x, y)));
+                            float Dplane = Dot(filteredNormal(x, y), DistancePos);
+                            Dplane = std::clamp(Dplane, 1e-5f,1.0f);
+    
+                            w_ixy = J_kernel(DisSqr, colorDistSqr, DnormalSqr, Dplane,
+                                             m_sigmaCoord, m_sigmaColor, m_sigmaNormal,
+                                             m_sigmaPlane);
+                            FinalImage(x, y) += filteredImage(i_x, i_y) * w_ixy;
+                             //add weights
+                            weight += w_ixy;
+                        }
                     }
                 }
+                if (0.0 != weight) {
+                    FinalImage(x, y) /= weight;
+                } else {
+                    FinalImage(x, y) = 0.0;
+                }
+    
+                 filteredImage(x, y) = float(0.0);
             }
-            if (0.0 != weight) {
-                FinalImage(x, y) /= weight;
-            } else {
-                FinalImage(x, y) = 0.0;
-            }
-
-            // filteredImage(x, y) = float(0.0);
         }
-    }
 
     // return filteredImage;
     return FinalImage;
@@ -145,7 +159,7 @@ void Denoiser::Maintain(const FrameInfo &frameInfo) { m_preFrameInfo = frameInfo
 
 Buffer2D<Float3> Denoiser::ProcessFrame(const FrameInfo &frameInfo) {
     // Filter current frame
-    Buffer2D<Float3> filteredColor;
+    Buffer2D<Float3> filteredColor = frameInfo.m_beauty;
     filteredColor = Filter(frameInfo);
 
     // Reproject previous frame color to current
