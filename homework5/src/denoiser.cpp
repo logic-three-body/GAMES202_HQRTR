@@ -27,14 +27,13 @@ void Denoiser::Reprojection(const FrameInfo &frameInfo) {
                 Float3 proj_pos = preWorldToScreen(pre_pos, Float3::Point);
                
 
-                //int prex = static_cast<int>(proj_pos.x / proj_pos.z);
-                //int prey = static_cast<int>(proj_pos.y / proj_pos.z);
+
                 int prex = static_cast<int>(proj_pos.x);
                 int prey = static_cast<int>(proj_pos.y);
 
 
-                if (prex < 0 || prex >= width || prey < 0 || prey >= height /*||
-                    m_preFrameInfo.m_id(prex, prey) != id*/) {
+                if (prex < 0 || prex >= width || prey < 0 || prey >= height ||
+                    m_preFrameInfo.m_id(prex, prey) != id) {
                     m_valid(x, y) = false;
                     continue;
                 } else {
@@ -169,7 +168,7 @@ void Denoiser::Maintain(const FrameInfo &frameInfo) { m_preFrameInfo = frameInfo
 Buffer2D<Float3> Denoiser::ProcessFrame(const FrameInfo &frameInfo) {
     // Filter current frame
     Buffer2D<Float3> filteredColor = frameInfo.m_beauty;
-    // filteredColor = Filter(frameInfo);
+     filteredColor = Filter(frameInfo);
 
     // Reproject previous frame color to current
     if (m_useTemportal) {
