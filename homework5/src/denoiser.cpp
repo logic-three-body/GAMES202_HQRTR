@@ -9,24 +9,29 @@ void Denoiser::Reprojection(const FrameInfo &frameInfo) {
         m_preFrameInfo.m_matrix[m_preFrameInfo.m_matrix.size() - 1];
     Matrix4x4 preWorldToCamera =
         m_preFrameInfo.m_matrix[m_preFrameInfo.m_matrix.size() - 2];
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             // TODO: Reproject
-            float id = static_cast<int>(frameInfo.m_id(x, y));
+            int id = static_cast<int>(frameInfo.m_id(x, y));
             if (-1 != id) {
+                
                 Matrix4x4 InvModel = Inverse(frameInfo.m_matrix[id]);
                 Matrix4x4 PreModel = m_preFrameInfo.m_matrix[id];
                 //上一点屏幕坐标<-MVP(上一帧即运动前)-运动前模型坐标<-逆模型矩阵-当前位置
                 // Matrix4x4 Reprojection =
                 //    preWorldToScreen * PreModel * InvModel;
-                Matrix4x4 Reprojection =
-                    PreModel * InvModel * PreModel * preWorldToScreen;
-                Float3 proj_pos = Reprojection(frameInfo.m_position(x, y), Float3::Point);
-                // Float3 inv_pos = InvModel
 
+                Float3 inv_pos = InvModel(frameInfo.m_position(x,y),Float3::Point);
+                Float3 pre_pos = PreModel(inv_pos, Float3::Point);
+                Float3 proj_pos = preWorldToScreen(pre_pos, Float3::Point);
+               
+
+                //int prex = static_cast<int>(proj_pos.x / proj_pos.z);
+                //int prey = static_cast<int>(proj_pos.y / proj_pos.z);
                 int prex = static_cast<int>(proj_pos.x);
                 int prey = static_cast<int>(proj_pos.y);
+
 
                 if (prex < 0 || prex >= width || prey < 0 || prey >= height /*||
                     m_preFrameInfo.m_id(prex, prey) != id*/) {
@@ -36,7 +41,7 @@ void Denoiser::Reprojection(const FrameInfo &frameInfo) {
                     m_valid(x, y) = true;
                     m_misc(x, y) = m_accColor(prex, prey);
                 }
-            }
+            } 
         }
     }
     std::swap(m_misc, m_accColor);

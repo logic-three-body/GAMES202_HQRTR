@@ -120,7 +120,7 @@ Float3 Matrix4x4::operator()(const Float3 &p, const Float3::EType &type) const {
         float y = m[1][0] * p.x + m[1][1] * p.y + m[1][2] * p.z + m[1][3];
         float z = m[2][0] * p.x + m[2][1] * p.y + m[2][2] * p.z + m[2][3];
         float w = m[3][0] * p.x + m[3][1] * p.y + m[3][2] * p.z + m[3][3];
-        w = std::clamp(w,1e-5f,1.0f);
+        w = std::clamp(w,1e-5f,1e+5f);
         ret = Float3(x, y, z) / w;
     } else if (type == Float3::Vector) {
         float x = m[0][0] * p.x + m[0][1] * p.y + m[0][2] * p.z;
