@@ -100,7 +100,7 @@ Matrix4x4 Inverse(const Matrix4x4 &mat) {
                 mat.m[0][2] * mat.m[1][1] * mat.m[2][0];
     float det = mat.m[0][0] * inv[0][0] + mat.m[0][1] * inv[1][0] +
                 mat.m[0][2] * inv[2][0] + mat.m[0][3] * inv[3][0];
-    return Matrix4x4(inv) / std::clamp(det,1e-5f,1e+5f);
+    return Matrix4x4(inv) / std::max(det,1e-5f);
 }
 
 Matrix4x4 Transpose(const Matrix4x4 &mat) {

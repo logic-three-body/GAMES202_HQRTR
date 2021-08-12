@@ -9,7 +9,7 @@ void Denoiser::Reprojection(const FrameInfo &frameInfo) {
         m_preFrameInfo.m_matrix[m_preFrameInfo.m_matrix.size() - 1];
     Matrix4x4 preWorldToCamera =
         m_preFrameInfo.m_matrix[m_preFrameInfo.m_matrix.size() - 2];
-    //#pragma omp parallel for
+   // #pragma omp parallel for
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             // TODO: Reproject
@@ -28,7 +28,11 @@ void Denoiser::Reprojection(const FrameInfo &frameInfo) {
 
                 int prex = static_cast<int>(proj_pos.x);
                 int prey = static_cast<int>(proj_pos.y);
-
+                if (prex < 0 || prex >= width || prey < 0 ||
+                    prey >= height) { // for pink room check
+                    m_valid(x,y) = false;
+                    continue;
+                }
                 int pre_id = static_cast<int>(m_preFrameInfo.m_id(prex, prey));
                 if (prex < 0 || prex >= width || prey < 0 || prey >= height ||
                     pre_id != id) {
@@ -75,12 +79,12 @@ void Denoiser::TemporalAccumulation(const Buffer2D<Float3> &curFilteredColor) {
 
             // TODO: Exponential moving average
             float alpha = 1.0f;
-            if (m_valid(x, y)) {
-                alpha = m_alpha;
-            }
-            m_misc(x, y) = Lerp(color, curFilteredColor(x, y), alpha);
-            //m_misc(x, y) =
-            //    Lerp(curFilteredColor(x, y), color, alpha); // for debug reproject
+            //if (m_valid(x, y)) {
+            //    alpha = m_alpha;
+            //}
+            //m_misc(x, y) = Lerp(color, curFilteredColor(x, y), alpha);
+            m_misc(x, y) =
+                Lerp(curFilteredColor(x, y), color, alpha); // for debug reproject
         }
     }
     std::swap(m_misc, m_accColor);
@@ -187,10 +191,11 @@ void Denoiser::Init(const FrameInfo &frameInfo, const Buffer2D<Float3> &filtered
 
 void Denoiser::Maintain(const FrameInfo &frameInfo) { m_preFrameInfo = frameInfo; }
 
+//TODO ProcessFrame Debug
 Buffer2D<Float3> Denoiser::ProcessFrame(const FrameInfo &frameInfo) {
     // Filter current frame
     Buffer2D<Float3> filteredColor = frameInfo.m_beauty;
-    filteredColor = Filter(frameInfo);
+    //filteredColor = Filter(frameInfo);
 
     // Reproject previous frame color to current
     if (m_useTemportal) {

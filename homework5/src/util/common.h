@@ -11,7 +11,7 @@
 #define CHECK(cond)                                                                      \
     do {                                                                                 \
         if (!(cond)) {                                                                   \
-            LOG("Runtime Error.");                                                       \
+            LOG("Runtime Error.Maybe you out of range!\n");                                                       \
             exit(-1);                                                                    \
         }                                                                                \
     } while (false)
