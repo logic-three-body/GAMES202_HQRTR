@@ -51,6 +51,7 @@ void Denoiser::TemporalAccumulation(const Buffer2D<Float3> &curFilteredColor) {
     int height = m_accColor.m_height;
     int width = m_accColor.m_width;
     int kernelRadius = 3;
+    int Isvalid = 0, Notvalid = 0;
 #pragma omp parallel for
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -65,7 +66,7 @@ void Denoiser::TemporalAccumulation(const Buffer2D<Float3> &curFilteredColor) {
                 }
             }
             mu /= Sqr(static_cast<float>(kernelRadius * 2 + 1));
-            Float3 sigma = 0;
+            Float3 sigma(0.0f);
             for (int i = -kernelRadius; i <= kernelRadius; i++) {
                 for (int j = -kernelRadius; j <= kernelRadius; j++) {
                     int x_i = x + i;
@@ -84,14 +85,20 @@ void Denoiser::TemporalAccumulation(const Buffer2D<Float3> &curFilteredColor) {
 
             // TODO: Exponential moving average
             float alpha = 1.0f;
+
              if (m_valid(x, y)) {
                 alpha = m_alpha;
-            }
+                 ++Isvalid;
+             } else {
+                 ++Notvalid;
+             }
              m_misc(x, y) = Lerp(color, curFilteredColor(x, y), alpha);
             //m_misc(x, y) =
             //    Lerp(curFilteredColor(x, y), color, alpha); // for debug reproject
         }
     }
+    //std::cout << "Vaild:" << Isvalid << " "
+    //          << "Not Vaild" << Notvalid << std::endl;
     std::swap(m_misc, m_accColor);
 }
 
@@ -124,9 +131,9 @@ Buffer2D<Float3> Denoiser::Filter(const FrameInfo &frameInfo) {
     Buffer2D<Float3> filteredPos = CreateBuffer2D<Float3>(width, height);    // position
     int kernelRadius = 16;
     if (1280 == width) { // for pink-room
-        // m_sigmaColor = 2.4;
-        // m_sigmaColor = 4.4;
-        m_sigmaColor = 8.4;
+        // m_sigmaColor = 2.4f;
+        // m_sigmaColor = 4.4f;
+        m_sigmaColor = 8.4f;
     }
     // Parameters
 
@@ -172,7 +179,7 @@ Buffer2D<Float3> Denoiser::Filter(const FrameInfo &frameInfo) {
                     }
                 }
             }
-            if (0.0 != weight) {
+            if (0.0f != weight) {
                 FinalImage(x, y) /= weight;
             } else {
                 FinalImage(x, y) = 0.0;
