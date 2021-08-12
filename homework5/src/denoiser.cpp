@@ -79,7 +79,8 @@ void Denoiser::TemporalAccumulation(const Buffer2D<Float3> &curFilteredColor) {
                 alpha = m_alpha;
             }
             m_misc(x, y) = Lerp(color, curFilteredColor(x, y), alpha);
-            // m_misc(x, y) = Lerp(curFilteredColor(x, y), color, alpha);//for debug reproject
+            //m_misc(x, y) =
+            //    Lerp(curFilteredColor(x, y), color, alpha); // for debug reproject
         }
     }
     std::swap(m_misc, m_accColor);

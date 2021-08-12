@@ -64,6 +64,6 @@ int main() {
     std::cout << "Box:\n";
     Denoise(inputDir, outputDir, frameNum);
     std::cout << "Pink room:\n";
-    //   Denoise(inputDir2, outputDir2, frameNum2);
+    //Denoise(inputDir2, outputDir2, frameNum2);
     return 0;
 }
