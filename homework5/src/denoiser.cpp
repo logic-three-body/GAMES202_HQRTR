@@ -84,12 +84,12 @@ void Denoiser::TemporalAccumulation(const Buffer2D<Float3> &curFilteredColor) {
 
             // TODO: Exponential moving average
             float alpha = 1.0f;
-            // if (m_valid(x, y)) {
-            //    alpha = m_alpha;
-            //}
-            // m_misc(x, y) = Lerp(color, curFilteredColor(x, y), alpha);
-            m_misc(x, y) =
-                Lerp(curFilteredColor(x, y), color, alpha); // for debug reproject
+             if (m_valid(x, y)) {
+                alpha = m_alpha;
+            }
+             m_misc(x, y) = Lerp(color, curFilteredColor(x, y), alpha);
+            //m_misc(x, y) =
+            //    Lerp(curFilteredColor(x, y), color, alpha); // for debug reproject
         }
     }
     std::swap(m_misc, m_accColor);
@@ -199,8 +199,10 @@ void Denoiser::Maintain(const FrameInfo &frameInfo) { m_preFrameInfo = frameInfo
 // TODO ProcessFrame Debug
 Buffer2D<Float3> Denoiser::ProcessFrame(const FrameInfo &frameInfo) {
     // Filter current frame
-    Buffer2D<Float3> filteredColor = frameInfo.m_beauty;
-    //filteredColor = Filter(frameInfo);
+    Buffer2D<Float3> filteredColor;
+	//for debug:
+    //filteredColor = frameInfo.m_beauty;
+    filteredColor = Filter(frameInfo);
 
     // Reproject previous frame color to current
     if (m_useTemportal) {
