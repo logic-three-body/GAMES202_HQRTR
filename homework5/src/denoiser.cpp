@@ -9,7 +9,7 @@ void Denoiser::Reprojection(const FrameInfo &frameInfo) {
         m_preFrameInfo.m_matrix[m_preFrameInfo.m_matrix.size() - 1];
     Matrix4x4 preWorldToCamera =
         m_preFrameInfo.m_matrix[m_preFrameInfo.m_matrix.size() - 2];
-    // #pragma omp parallel for
+#pragma omp parallel for
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             // TODO: Reproject
@@ -74,7 +74,13 @@ void Denoiser::TemporalAccumulation(const Buffer2D<Float3> &curFilteredColor) {
                 }
             }
             sigma /= Sqr(static_cast<float>(kernelRadius * 2 + 1));
-            //color = Clamp(color, mu - sigma * m_colorBoxK, mu + sigma * m_colorBoxK);
+            if (1280 == width) { // for pink room
+				//m_colorBoxK = 2.0f;
+                //m_colorBoxK = 0.5f;
+                //m_colorBoxK = 0.25f;
+                m_colorBoxK = 0.1f;
+            }
+            color = Clamp(color, mu - sigma * m_colorBoxK, mu + sigma * m_colorBoxK);
 
             // TODO: Exponential moving average
             float alpha = 1.0f;
@@ -194,7 +200,7 @@ void Denoiser::Maintain(const FrameInfo &frameInfo) { m_preFrameInfo = frameInfo
 Buffer2D<Float3> Denoiser::ProcessFrame(const FrameInfo &frameInfo) {
     // Filter current frame
     Buffer2D<Float3> filteredColor = frameInfo.m_beauty;
-    // filteredColor = Filter(frameInfo);
+    //filteredColor = Filter(frameInfo);
 
     // Reproject previous frame color to current
     if (m_useTemportal) {
