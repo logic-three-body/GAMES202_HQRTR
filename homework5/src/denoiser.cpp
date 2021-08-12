@@ -55,10 +55,33 @@ void Denoiser::TemporalAccumulation(const Buffer2D<Float3> &curFilteredColor) {
         for (int x = 0; x < width; x++) {
             // TODO: Temporal clamp
             Float3 color = m_accColor(x, y);
+            Float3 mu(0.0f);
+            for (int i = -kernelRadius; i <= kernelRadius; i++) {
+                for (int j = -kernelRadius; j <= kernelRadius; j++) {
+                    int localx = x + i;
+                    int localy = x + j;
+                    mu += curFilteredColor(localx,localy);
+                }
+            }
+            mu /= Sqr(static_cast<float>(kernelRadius * 2 + 1));
+            Float3 sigma = 0;
+            for (int i = -kernelRadius; i <= kernelRadius; i++) {
+                for (int j = -kernelRadius; j <= kernelRadius; j++) {
+                    int localx = x + i;
+                    int localy = x + j;
+                    sigma += Sqr(curFilteredColor(localx, localy)-mu);
+                }
+            }
+            sigma /= Sqr(static_cast<float>(kernelRadius * 2 + 1));
+            color =Clamp(color,mu-sigma*m_colorBoxK,mu+sigma*m_colorBoxK);
+
             // TODO: Exponential moving average
             float alpha = 1.0f;
-            // m_misc(x, y) = Lerp(color, curFilteredColor(x, y), alpha);
-            m_misc(x, y) = Lerp(curFilteredColor(x, y), color, alpha);
+            if (m_valid(x,y)) {
+                alpha = m_alpha;
+            }
+            m_misc(x, y) = Lerp(color, curFilteredColor(x, y), alpha);
+            //m_misc(x, y) = Lerp(curFilteredColor(x, y), color, alpha);//for debug reproject
         }
     }
     std::swap(m_misc, m_accColor);
